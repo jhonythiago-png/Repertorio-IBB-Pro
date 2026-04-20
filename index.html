@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REPERTÓRIO IBB | Netflix Style</title>
+    <!-- PWA & Mobile Optimization -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Repertório IBB">
+    <link rel="apple-touch-icon" href="hero_banner.png">
+    <meta name="theme-color" content="#141414">
+    
+    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header id="header">
+        <div class="logo">REPERTÓRIO IBB</div>
+        <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+        <nav id="navbar">
+            <ul>
+                <li><a href="#" id="homeNav" class="active">Página Inicial</a></li>
+                <li><a href="#" id="categoriesNav">Categorias</a></li>
+                <li><a href="#" id="newNav">Novos</a></li>
+                <li><a href="#" id="teamsNav">Equipes</a></li>
+                <li id="addSongNavItem" style="display:none;"><button id="addSongBtn" class="add-btn-main"><i class="fas fa-plus"></i> Adicionar</button></li>
+                <li><button id="admBtn" class="adm-btn"><i class="fas fa-lock"></i> ADM</button></li>
+            </ul>
+        </nav>
+        <div class="search-container">
+            <button id="forceRefreshBtn" title="Sincronizar e Atualizar">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <input type="text" id="searchInput" placeholder="Músicas ou artistas...">
+            <i class="fas fa-search"></i>
+        </div>
+    </header>
+
+    <main>
+        <!-- Category Filter Overlay -->
+        <div id="categoryOverlay" class="category-overlay">
+            <div id="categoryList" class="category-list"></div>
+        </div>
+
+        <!-- Add Song Modal -->
+        <div id="addSongModal" class="modal">
+            <div class="modal-content">
+                <span class="close-add-modal">&times;</span>
+                <div class="modal-info">
+                    <h2>Adicionar Novo Louvor</h2>
+                    <p>Preencha os dados abaixo para cadastrar na base local.</p>
+                    <form id="addSongForm" class="add-song-form">
+                        <input type="text" id="addTitle" placeholder="Nome do Louvor" required>
+                        <input type="text" id="addArtist" placeholder="Artista/Ministério" required>
+                        <input type="text" id="addObs" placeholder="Observações (ex: Tom E, 2x refrão)">
+                        <input type="url" id="addUrl" placeholder="URL do YouTube (Livre para busca se vazio)">
+                        <input type="url" id="addCifraUrl" placeholder="URL do Cifra Club (ex: https://www.cifraclub.com.br/artista/musica/)">
+                        <textarea id="addLyrics" placeholder="Letra da música (opcional — cole aqui a letra completa)" rows="6"></textarea>
+                        
+                        <div class="category-selection">
+                            <label>Selecione as Categorias:</label>
+                            <div id="categoryCheckboxes" class="checkbox-grid">
+                                <!-- Categorias injetadas aqui -->
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="save-btn-large">Salvar Louvor</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Senha (Portão de Liderança) -->
+        <div id="passwordGateModal" class="modal">
+            <div class="modal-content password-gate-content">
+                <span class="close-password-modal">&times;</span>
+                <div class="password-gate-body">
+                    <div class="password-gate-icon"><i class="fas fa-lock"></i></div>
+                    <h2>Área Restrita</h2>
+                    <p>Esta função é exclusiva para líderes do IBB.<br>Digite a senha para continuar.</p>
+                    <div class="password-input-wrap">
+                        <input type="text" style="-webkit-text-security: disc; text-security: disc;" id="leaderPasswordInput" placeholder="Senha de liderança..." autocomplete="off">
+                        <button id="submitPasswordBtn"><i class="fas fa-unlock-alt"></i> Entrar</button>
+                    </div>
+                    <p id="passwordError" class="password-error" style="display:none;">Senha incorreta. Tente novamente.</p>
+                </div>
+            </div>
+        </div>
+
+        <section class="hero" id="hero">
+            <div class="hero-content">
+                <h1 id="heroTitle">Repertório IBB</h1>
+                <p id="heroInfo">Louvor e Adoração • 2024</p>
+                <div class="buttons">
+                    <button class="play-btn" onclick="openHeroVideo()"><i class="fas fa-play"></i> Assistir</button>
+                    <button class="info-btn"><i class="fas fa-info-circle"></i> Mais Informações</button>
+                </div>
+            </div>
+            <div class="hero-overlay"></div>
+        </section>
+
+        <!-- Painel de Equipes -->
+        <div id="teamsContainer" style="display:none;" class="teams-container">
+            <div class="teams-header">
+                <h2><i class="fas fa-users"></i> Escalas por Equipe</h2>
+                <select id="teamSelector" class="team-selector">
+                    <option value="" disabled selected>Selecione a Equipe</option>
+                    <option value="Start" class="opt-start">Start</option>
+                    <option value="Amarelo" class="opt-amarelo">Amarelo</option>
+                    <option value="Laranja" class="opt-laranja">Laranja</option>
+                    <option value="Azul" class="opt-azul">Azul</option>
+                    <option value="Verde" class="opt-verde">Verde</option>
+                    <option value="Branco" class="opt-branco">Branco</option>
+                </select>
+                <p id="teamAdminStatus" style="display:none; color:#2ecc71; font-size:12px; margin-top:5px;"><i class="fas fa-unlock"></i> Modo Edição Ativo</p>
+                <div class="team-actions" style="display:none;" id="teamAdminActions">
+                    <button id="clearSetlistBtn" class="delete-song-btn" style="margin-top:15px; padding: 10px 15px;"><i class="fas fa-trash-alt"></i> Limpar Esta Escala</button>
+                </div>
+            </div>
+            
+            <div id="teamSetlistGrid" class="search-results-grid"></div>
+        </div>
+
+        <!-- Search Results Grid -->
+        <div id="searchResults" class="search-results-grid"></div>
+
+        <div id="categoriesContainer">
+            <!-- As categorias serão injetadas aqui via JS -->
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 IBB Louvor - Desenvolvido por <span class="developer-name">Jhony Berado</span></p>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════
+         MODO LOUVOR — Full-Screen Praise View Modal
+         ═══════════════════════════════════════════════ -->
+    <div id="praiseModeModal" class="praise-mode-modal">
+
+        <!-- Header / Controls -->
+        <div class="praise-header" id="praiseHeader">
+            <div class="praise-header-row1">
+                <div class="praise-song-info">
+                    <h2 id="praiseSongTitle">—</h2>
+                    <p id="praiseSongArtist"></p>
+                </div>
+                <button class="praise-close-btn" id="praiseModeClose" title="Fechar Modo Louvor">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="praise-controls-row">
+
+                <!-- Mode toggle -->
+                <div class="praise-mode-toggle">
+                    <button id="praiseModeVocalBtn" class="active">
+                        <i class="fas fa-microphone"></i> Vocal
+                    </button>
+                    <button id="praiseModeMusBtn">
+                        <i class="fas fa-guitar"></i> Músico
+                    </button>
+                </div>
+
+                <!-- Font size -->
+                <div class="praise-control-group">
+                    <button class="praise-ctrl-btn" id="praiseFontDec" title="Diminuir fonte">A−</button>
+                    <span class="praise-value-display" id="praiseFontSize">20</span>
+                    <button class="praise-ctrl-btn" id="praiseFontInc" title="Aumentar fonte">A+</button>
+                </div>
+
+                <!-- Auto-scroll -->
+                <button class="praise-scroll-btn" id="praiseScrollToggle">
+                    <i class="fas fa-play"></i> Auto-scroll
+                </button>
+                <input type="range" class="praise-speed-slider" id="praiseScrollSpeed"
+                    min="1" max="10" value="3" title="Velocidade do scroll">
+
+                <!-- Musician-only controls -->
+                <div id="praiseMusiciansControls" class="praise-musicians-controls" style="display:none;">
+
+                    <!-- Transpose -->
+                    <div class="praise-control-group">
+                        <label>Tom</label>
+                        <button class="praise-ctrl-btn" id="praiseTransposeDown">−</button>
+                        <span class="praise-value-display" id="praiseTransposeValue">0</span>
+                        <button class="praise-ctrl-btn" id="praiseTransposeUp">+</button>
+                    </div>
+
+                    <!-- Capo -->
+                    <div class="praise-control-group">
+                        <label>Capo</label>
+                        <select class="praise-capo-select" id="praiseCapoSelect">
+                            <option value="0">—</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+
+                </div><!-- /praiseMusiciansControls -->
+
+            </div><!-- /praise-controls-row -->
+        </div><!-- /praise-header -->
+
+        <!-- Scrollable Content -->
+        <div class="praise-content" id="praiseModeContent">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- Floating toggle button -->
+        <button class="praise-toggle-header" id="praiseToggleHeader" title="Mostrar/Ocultar Controles">
+            <i class="fas fa-sliders-h"></i>
+        </button>
+
+    </div><!-- /praiseModeModal -->
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="video-wrapper">
+                <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="modal-info">
+                <h2 id="modalTitle"></h2>
+                <p id="modalArtist"></p>
+                <p id="modalObs" style="color: #bbb; font-style: italic; font-size: 0.9rem; margin-top: 5px;"></p>
+                <div class="modal-actions">
+                    <button id="addToSetlistBtn" title="Adicionar à Escala" style="display:none;"><i class="fas fa-list-ul"></i> Escalar</button>
+                    <button id="editUrlBtn" title="Editar URL do vídeo" style="display:none;"><i class="fas fa-edit"></i> Editar Versão</button>
+                </div>
+                
+                <!-- Painel de Adição à Escala -->
+                <div id="setlistEditorPanel" class="url-editor-panel" style="display:none;">
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-list-ul"></i> Adicionar à Escala da Equipe</p>
+                        <select id="setlistTeamSelect" class="team-selector" style="margin-bottom: 10px;">
+                            <!-- Opções populadas no Javascript dependendo da senha -->
+                        </select>
+                        <input type="text" id="setlistObsInput" placeholder="Tom ou observação (ex: Tom E)..." />
+                        <div class="url-editor-actions" style="margin-top:10px;">
+                            <button id="saveSetlistBtn" class="save-url-btn"><i class="fas fa-plus"></i> Confirmar na Escala</button>
+                            <button id="cancelSetlistBtn" class="cancel-url-btn"><i class="fas fa-times"></i> Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Gerenciamento ADM -->
+                <div id="urlEditorPanel" class="url-editor-panel" style="display:none;">
+                    
+                    <!-- Aba 0: Editar Nome do Louvor -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-music"></i> Editar Nome do Louvor</p>
+                        <input type="text" id="newTitleInput" placeholder="Nome do louvor..." />
+                        <div class="url-editor-actions">
+                            <button id="saveTitleBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Nome</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1: Editar URL -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-link"></i> Editar Vídeo (URL)</p>
+                        <input type="url" id="newUrlInput" placeholder="https://www.youtube.com/watch?v=..." />
+                        <div class="url-editor-actions">
+                            <button id="saveUrlBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar URL</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1b: Editar Artista -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-microphone"></i> Editar Nome do Artista</p>
+                        <input type="text" id="newArtistInput" placeholder="Nome do artista ou ministério..." />
+                        <div class="url-editor-actions">
+                            <button id="saveArtistBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Artista</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1c: Editar Observações -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-sticky-note"></i> Editar Observações</p>
+                        <input type="text" id="newObsInput" placeholder="Observações e Tom (ex: Tom D, toca 2x)..." />
+                        <div class="url-editor-actions">
+                            <button id="saveObsBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Obs</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1d: Letra da Música -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-align-left"></i> Letra da Música</p>
+                        <textarea id="newLyricsInput" placeholder="Cole a letra completa aqui..." rows="8"></textarea>
+                        <div class="url-editor-actions">
+                            <button id="saveLyricsBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Letra</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1e: Cifra Club -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-guitar"></i> Cifra Club</p>
+                        <input type="url" id="newCifraUrlInput" placeholder="https://www.cifraclub.com.br/artista/musica/" />
+                        <div class="url-editor-actions" style="margin-top:10px;">
+                            <button id="saveCifraBtn" class="save-url-btn"><i class="fas fa-download"></i> Salvar e Buscar Cifra</button>
+                        </div>
+                        <p id="cifraStatus" style="font-size:0.78rem; color:#888; margin-top:8px;"></p>
+                    </div>
+
+                    <!-- Aba 2: Editar Categorias -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-tags"></i> Editar Categorias</p>
+                        <div id="editCategoryCheckboxes" class="edit-checkbox-grid"></div>
+                        <button id="saveCategoriesBtn" class="save-url-btn" style="margin-top:12px;"><i class="fas fa-save"></i> Salvar Categorias</button>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 3: Excluir -->
+                    <div class="editor-section delete-section">
+                        <p class="editor-section-title danger"><i class="fas fa-trash-alt"></i> Zona de Perigo</p>
+                        <div id="deleteConfirmStep" style="display:none;" class="delete-confirm-box">
+                            <p>Tem certeza? Esta ação <strong>não pode ser desfeita</strong>.</p>
+                            <div class="url-editor-actions">
+                                <button id="confirmDeleteBtn" class="delete-final-btn"><i class="fas fa-trash-alt"></i> Sim, Excluir</button>
+                                <button id="cancelDeleteBtn" class="cancel-url-btn"><i class="fas fa-times"></i> Cancelar</button>
+                            </div>
+                        </div>
+                        <button id="deleteSongBtn" class="delete-song-btn"><i class="fas fa-trash-alt"></i> Excluir este Louvor</button>
+                    </div>
+
+                    <div class="url-editor-actions" style="margin-top:16px;">
+                        <button id="cancelUrlBtn" class="cancel-url-btn" style="width:100%;justify-content:center;"><i class="fas fa-times"></i> Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=16"></script>
+</body>
+</html>
