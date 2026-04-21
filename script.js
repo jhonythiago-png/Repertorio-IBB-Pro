@@ -307,53 +307,42 @@ function openPerformance(song, mode) {
     currentZoomLevel = 1.0;
 
     const screen = document.getElementById('performanceScreen');
-    const content = document.getElementById('performanceContent');
     const title = document.getElementById('perfTitle');
     const artist = document.getElementById('perfArtist');
     const keyIndicator = document.getElementById('perfKeyDisplay');
 
-    // Resetar estado de alinhamento
+    // Resetar modo e sempre mostrar o controle de Tom (vocal e músico)
     screen.classList.remove('vocal-mode');
-    const keyContainer = document.querySelector('.control-group'); // Seletor do grupo do Tom
-    
-    if (mode === 'vocal') {
-        screen.classList.add('vocal-mode');
-        // Esconde o grupo do Tom (label + seletor) no vocal
-        if (keyContainer) {
-            const label = keyContainer.querySelector('.control-label');
-            if (label && label.innerText.toLowerCase().includes('tom')) {
-                keyContainer.style.display = 'none';
-            }
-        }
+    document.querySelectorAll('.control-group').forEach(g => g.style.display = 'flex');
+
+    if (mode === 'vocal') screen.classList.add('vocal-mode');
+
+    title.textContent = song.title;
+    artist.textContent = song.artist || 'Artista Desconhecido';
+
+    // Detecta tom original: "Tom: X" no texto, senão primeira linha de acorde
+    let originalKey = 'Original';
+    const textContent = song.cifra_text || '';
+    const tomMatch = textContent.match(/Tom:\s*([A-G][b#]?m?)/i);
+
+    if (tomMatch) {
+        originalKey = tomMatch[1];
     } else {
-        if (keyContainer) {
-            // Volta a mostrar no músico (garante display flex para manter layout)
-            const label = keyContainer.querySelector('.control-label');
-            if (label && label.innerText.toLowerCase().includes('tom')) {
-                keyContainer.style.display = 'flex';
+        const lines = textContent.split('\n');
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            if (isChordLineByHeuristic(trimmed)) {
+                const firstChord = trimmed.split(/\s+/)[0];
+                if (/^[A-G][b#]?/.test(firstChord)) {
+                    originalKey = firstChord.split('/')[0];
+                    console.log('🎵 Tom original detectado:', originalKey);
+                    break;
+                }
             }
         }
     }
 
-    title.textContent = song.title;
-    artist.textContent = song.artist || 'Artista Desconhecido';
-    
-    // Tenta identificar o tom original no texto (Tom: X ou primeiro acorde encontrado)
-    let originalKey = 'Original';
-    const textContent = song.cifra_text || '';
-    const originalKeyMatch = textContent.match(/Tom:\s*([A-G][b#]?)/i);
-    
-    if (originalKeyMatch) {
-        originalKey = originalKeyMatch[1];
-    } else {
-        // Heurística Pro: busca o primeiro acorde entre colchetes ou no início de linha
-        const firstChordMatch = textContent.match(/\[([A-G][b#]?[^\]]*)\]/) || textContent.match(/\b([A-G][b#]?(?:m|maj|dim|aug|sus|add|[0-9])?)\b/);
-        if (firstChordMatch) {
-            originalKey = firstChordMatch[1].replace(/[\[\]]/g, '').split('/')[0].trim();
-            console.log('🔍 Tom original sugerido pela primeira nota:', originalKey);
-        }
-    }
-    
     keyIndicator.textContent = originalKey;
     keyIndicator.dataset.original = originalKey;
 
@@ -361,7 +350,7 @@ function openPerformance(song, mode) {
 
     screen.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    
+
     // Fechar grade se estiver aberta
     document.getElementById('keySelectorGrid').style.display = 'none';
 }
@@ -403,13 +392,13 @@ function renderPerformanceContent() {
         const isTechnicalToRemove =
             /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental|Cifra|Riff|Violão|Guitarra|Baixo|Bateria)/i.test(trimmed) ||
             trimmed.toLowerCase().startsWith('tab -') ||
-            /^e\|/.test(trimmed) || /^B\|/.test(trimmed) || /^G\|/.test(trimmed) ||
-            /^D\|/.test(trimmed) || /^A\|/.test(trimmed) ||
-            /Parte \d de \d/i.test(trimmed);
+            /^[eEBGDA]\|/.test(trimmed) ||
+            /^Parte\s+\d+\s+de\s+\d+/i.test(trimmed);
 
-        // 4. Marcações de estrutura (mantidas em ambos os modos)
+        // 4. Marcadores de estrutura REAIS (mantidos em ambos os modos) — NÃO inclui "Parte X de X"
         const isStructureMarker =
-            /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Parte|Primeira|Segunda|Terceira|Quarta|Pre[- ]?Refrão|Bridge|Pré)/i.test(trimmed);
+            /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta|Pré[- ]?Refrão|Pre[- ]?Refrão|Bridge)[^\d]/i.test(trimmed) ||
+            /^\[(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta|Pré|Pre|Bridge)/i.test(trimmed);
 
         // ── MODO VOCAL: só letra + marcadores de estrutura ──────────────
         if (currentPerformanceMode === 'vocal') {
@@ -555,17 +544,27 @@ document.getElementById('closePerfBtn').onclick = () => {
 // Os listeners de Zoom e Transposição antigos foram removidos para dar lugar à nova Grade Pro.
 
 // Auto Scroll
+// ── Auto Scroll com controle de velocidade ───────────────────────────
+let scrollSpeed = 3; // 1 = lento, 10 = rápido (padrão: 3)
+const SCROLL_MIN = 1;
+const SCROLL_MAX = 10;
+
 function toggleAutoScroll() {
     if (autoScrollInterval) {
         stopAutoScroll();
     } else {
-        const content = document.getElementById('performanceContent');
-        const btn = document.getElementById('toggleScroll');
-        btn.innerHTML = '<i class="fas fa-pause"></i>';
-        autoScrollInterval = setInterval(() => {
-            content.scrollTop += 1;
-        }, 50); // Velocidade padrão
+        startAutoScroll();
     }
+}
+
+function startAutoScroll() {
+    const content = document.getElementById('performanceContent');
+    const btn = document.getElementById('toggleScroll');
+    if (btn) btn.innerHTML = '<i class="fas fa-pause"></i>';
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = setInterval(() => {
+        content.scrollTop += 1;
+    }, Math.round(110 - scrollSpeed * 10)); // speed 1→100ms, speed 10→10ms
 }
 
 function stopAutoScroll() {
@@ -575,7 +574,28 @@ function stopAutoScroll() {
     if (btn) btn.innerHTML = '<i class="fas fa-play"></i>';
 }
 
+function updateScrollSpeedLabel() {
+    const label = document.getElementById('scrollSpeedLabel');
+    if (label) label.textContent = scrollSpeed;
+}
+
 document.getElementById('toggleScroll').onclick = toggleAutoScroll;
+
+document.getElementById('scrollFaster').onclick = () => {
+    if (scrollSpeed < SCROLL_MAX) {
+        scrollSpeed++;
+        updateScrollSpeedLabel();
+        if (autoScrollInterval) startAutoScroll(); // reinicia com nova velocidade
+    }
+};
+
+document.getElementById('scrollSlower').onclick = () => {
+    if (scrollSpeed > SCROLL_MIN) {
+        scrollSpeed--;
+        updateScrollSpeedLabel();
+        if (autoScrollInterval) startAutoScroll();
+    }
+};oScroll;
 
 // Capturar Cifra Automaticamente (ADM)
 const btnCapturar = document.getElementById('btnCapturarCifra');
