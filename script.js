@@ -311,7 +311,7 @@ function openPerformance(song, mode) {
     const artist = document.getElementById('perfArtist');
     const keyIndicator = document.getElementById('perfKeyDisplay');
 
-    // Resetar modo e sempre mostrar o controle de Tom (vocal e músico)
+    // Resetar modo — Tom sempre visível em ambos os modos (vocal e músico)
     screen.classList.remove('vocal-mode');
     document.querySelectorAll('.control-group').forEach(g => g.style.display = 'flex');
 
@@ -320,7 +320,7 @@ function openPerformance(song, mode) {
     title.textContent = song.title;
     artist.textContent = song.artist || 'Artista Desconhecido';
 
-    // Detecta tom original: "Tom: X" no texto, senão primeira linha de acorde
+    // Detecta tom original: "Tom: X" no texto, senão varre linhas de acorde
     let originalKey = 'Original';
     const textContent = song.cifra_text || '';
     const tomMatch = textContent.match(/Tom:\s*([A-G][b#]?m?)/i);
@@ -330,13 +330,13 @@ function openPerformance(song, mode) {
     } else {
         const lines = textContent.split('\n');
         for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            if (isChordLineByHeuristic(trimmed)) {
-                const firstChord = trimmed.split(/\s+/)[0];
+            const t = line.trim();
+            if (!t) continue;
+            if (isChordLineByHeuristic(t)) {
+                const firstChord = t.split(/\s+/)[0];
                 if (/^[A-G][b#]?/.test(firstChord)) {
                     originalKey = firstChord.split('/')[0];
-                    console.log('🎵 Tom original detectado:', originalKey);
+                    console.log('🎵 Tom detectado:', originalKey);
                     break;
                 }
             }
@@ -351,7 +351,6 @@ function openPerformance(song, mode) {
     screen.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // Fechar grade se estiver aberta
     document.getElementById('keySelectorGrid').style.display = 'none';
 }
 
@@ -384,21 +383,22 @@ function renderPerformanceContent() {
             return;
         }
 
-        // 2. Identificar se a linha é de acorde/tab (instrumental)
+        // 2. Linha de acorde ou tablatura
         const isCifraOrTab = isChordLineByHeuristic(line) ||
             /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
-        
-        // 3. Marcações técnicas instrumentais a remover no vocal
+
+        // 3. Marcações técnicas instrumentais — removidas no vocal
         const isTechnicalToRemove =
             /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental|Cifra|Riff|Violão|Guitarra|Baixo|Bateria)/i.test(trimmed) ||
             trimmed.toLowerCase().startsWith('tab -') ||
             /^[eEBGDA]\|/.test(trimmed) ||
             /^Parte\s+\d+\s+de\s+\d+/i.test(trimmed);
 
-        // 4. Marcadores de estrutura REAIS (mantidos em ambos os modos) — NÃO inclui "Parte X de X"
+        // 4. Marcadores de estrutura reais — mantidos em ambos os modos
+        // "Parte X de X" NÃO é estrutura, é índice de tablatura — já removido acima
         const isStructureMarker =
-            /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta|Pré[- ]?Refrão|Pre[- ]?Refrão|Bridge)[^\d]/i.test(trimmed) ||
-            /^\[(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta|Pré|Pre|Bridge)/i.test(trimmed);
+            /^\[(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta|Pré[- ]?Refrão|Pre[- ]?Refrão|Bridge)/i.test(trimmed) ||
+            /^\((?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
 
         // ── MODO VOCAL: só letra + marcadores de estrutura ──────────────
         if (currentPerformanceMode === 'vocal') {
@@ -416,13 +416,13 @@ function renderPerformanceContent() {
         // ── MODO MÚSICO: exibe tudo como Cifra Club ──────────────────────
         const lineDiv = document.createElement('div');
         lineDiv.className = 'perf-line';
-        
-        if (isCifraOrTab || isTechnicalToRemove && !isStructureMarker) {
+
+        if (isCifraOrTab || (isTechnicalToRemove && !isStructureMarker)) {
             lineDiv.classList.add('chord-line');
         } else if (isStructureMarker) {
             lineDiv.classList.add('structure-marker');
         }
-        
+
         lineDiv.textContent = displayLine || ' ';
         content.appendChild(lineDiv);
     });
@@ -513,25 +513,24 @@ function isChordLineByHeuristic(line) {
     const trimmed = line.trim();
     if (!trimmed) return false;
 
-    // Detecta linhas de tablatura (e|--, B|--, G|--, D|--, A|--, E|--)
+    // Detecta tablatura: e|--, B|--, G|--, D|--, A|--, E|--
     if (/^[eEBGDAd]\|[\-\d\s\|pbrhx\/\(\)\~\>\.\*]+$/.test(trimmed)) return true;
-    // Linha de tab com só traços e números
+    // Linha só com traços/números (tab sem prefixo)
     if (/^[\-\d\s\|\(\)\~\>\.\/pbrhx\*]{5,}$/.test(trimmed) && /\d/.test(trimmed) && !/[a-záéíóúãõçà]/i.test(trimmed)) return true;
 
     const words = trimmed.split(/\s+/);
     let potentialChords = 0;
 
     words.forEach(word => {
-        // Acorde completo: A, Am, Cmaj7, F#m, Bb/D, /G, etc.
         if (/^[A-G][b#]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|\+|\-|\/[A-G][b#]?)*$/.test(word) ||
             /^\/[A-G][b#]?$/.test(word)) {
             potentialChords++;
         }
     });
 
-    // Linha de acorde: maioria das "palavras" são acordes e linha tem pouco texto minúsculo
-    const hasLowercaseWords = words.some(w => /[a-záéíóúãõçà]{3,}/.test(w));
-    return potentialChords > 0 && (potentialChords / words.length) > 0.3 && !hasLowercaseWords;
+    // Linha de acorde: maioria são acordes E não há palavras em português
+    const hasPortugueseWords = words.some(w => /[a-záéíóúãõçà]{3,}/.test(w));
+    return potentialChords > 0 && (potentialChords / words.length) > 0.3 && !hasPortugueseWords;
 }
 
 // Botão Voltar
@@ -544,10 +543,8 @@ document.getElementById('closePerfBtn').onclick = () => {
 // Os listeners de Zoom e Transposição antigos foram removidos para dar lugar à nova Grade Pro.
 
 // Auto Scroll
-// ── Auto Scroll com controle de velocidade ───────────────────────────
-let scrollSpeed = 3; // 1 = lento, 10 = rápido (padrão: 3)
-const SCROLL_MIN = 1;
-const SCROLL_MAX = 10;
+// ── Auto Scroll com controle de velocidade (+/-) ─────────────────────
+let scrollSpeed = 3; // 1 = muito lento, 10 = muito rápido
 
 function toggleAutoScroll() {
     if (autoScrollInterval) {
@@ -562,9 +559,10 @@ function startAutoScroll() {
     const btn = document.getElementById('toggleScroll');
     if (btn) btn.innerHTML = '<i class="fas fa-pause"></i>';
     clearInterval(autoScrollInterval);
+    // speed 1 → 100ms/px  |  speed 10 → 10ms/px
     autoScrollInterval = setInterval(() => {
         content.scrollTop += 1;
-    }, Math.round(110 - scrollSpeed * 10)); // speed 1→100ms, speed 10→10ms
+    }, Math.round(110 - scrollSpeed * 10));
 }
 
 function stopAutoScroll() {
@@ -574,28 +572,15 @@ function stopAutoScroll() {
     if (btn) btn.innerHTML = '<i class="fas fa-play"></i>';
 }
 
-function updateScrollSpeedLabel() {
-    const label = document.getElementById('scrollSpeedLabel');
-    if (label) label.textContent = scrollSpeed;
-}
-
 document.getElementById('toggleScroll').onclick = toggleAutoScroll;
 
 document.getElementById('scrollFaster').onclick = () => {
-    if (scrollSpeed < SCROLL_MAX) {
-        scrollSpeed++;
-        updateScrollSpeedLabel();
-        if (autoScrollInterval) startAutoScroll(); // reinicia com nova velocidade
-    }
+    if (scrollSpeed < 10) { scrollSpeed++; if (autoScrollInterval) startAutoScroll(); }
 };
 
 document.getElementById('scrollSlower').onclick = () => {
-    if (scrollSpeed > SCROLL_MIN) {
-        scrollSpeed--;
-        updateScrollSpeedLabel();
-        if (autoScrollInterval) startAutoScroll();
-    }
-};oScroll;
+    if (scrollSpeed > 1) { scrollSpeed--; if (autoScrollInterval) startAutoScroll(); }
+};
 
 // Capturar Cifra Automaticamente (ADM)
 const btnCapturar = document.getElementById('btnCapturarCifra');
@@ -1308,24 +1293,9 @@ document.querySelectorAll('.sub-tab-btn').forEach(btn => {
         // Se a tela de performance estiver aberta, atualize a view em tempo real
         const screen = document.getElementById('performanceScreen');
         if (screen && screen.style.display === 'flex') {
-            const keyContainer = document.querySelector('.control-group');
-            if (currentPerformanceMode === 'vocal') {
-                screen.classList.add('vocal-mode');
-                if (keyContainer) {
-                    const label = keyContainer.querySelector('.control-label');
-                    if (label && label.innerText.toLowerCase().includes('tom')) {
-                        keyContainer.style.display = 'none';
-                    }
-                }
-            } else {
-                screen.classList.remove('vocal-mode');
-                if (keyContainer) {
-                    const label = keyContainer.querySelector('.control-label');
-                    if (label && label.innerText.toLowerCase().includes('tom')) {
-                        keyContainer.style.display = 'flex';
-                    }
-                }
-            }
+            screen.classList.toggle('vocal-mode', currentPerformanceMode === 'vocal');
+            // Tom sempre visível em ambos os modos
+            document.querySelectorAll('.control-group').forEach(g => g.style.display = 'flex');
             renderPerformanceContent();
         }
 
