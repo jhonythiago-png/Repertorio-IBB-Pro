@@ -1660,30 +1660,53 @@ footer {
 .perf-content {
     flex: 1;
     overflow-y: auto;
-    padding: 85px 8% 40px; /* Padding ideal para não cobrir o início da música */
-    font-family: 'Roboto Mono', monospace;
+    padding: 85px 8% 40px;
+    font-family: 'Courier New', Courier, monospace; /* Monospace igual ao Cifra Club */
     line-height: 1.8;
 }
 
+/* Linha padrão — letra/texto, tamanho Cifra Club */
 .perf-line {
     white-space: pre-wrap;
     min-height: 1.5em;
-    font-size: 16px; /* Letra padrão Cifra Club */
+    font-size: 15px; /* Tamanho padrão do Cifra Club para letra */
+    color: #e8e8e8;
 }
 
-/* Alinhamento Vocal Específico (Conforto Superior) */
-.performance-screen.vocal-mode .perf-line {
-    text-align: left;
-    font-size: 18px !important; /* Fonte ligeiramente maior para vocalistas */
-    color: #eee;
-    padding-left: 20px;
-}
-
+/* Linha de acorde (modo músico) — amarelo, menor, como Cifra Club */
 .chord-line {
     color: #f5c842;
     font-weight: bold;
-    font-size: 14px; /* Tamanho da cifra menor, como no Cifra Club */
-    /* margin-bottom: -0.5em; REMOVIDO para voltar ao layout original do Cifra Club */
+    font-size: 13px; /* Tamanho dos acordes no Cifra Club */
+    line-height: 1.4;
+}
+
+/* Marcadores de estrutura ([Refrão], [Verso], etc.) — destaque em ambos os modos */
+.structure-marker {
+    color: #e09b2d;
+    font-weight: bold;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* Modo Vocal: letra limpa, sem acordes, fonte confortável */
+.perf-line.vocal-line {
+    font-size: 15px; /* Igual ao Cifra Club */
+    color: #e8e8e8;
+    text-align: left;
+    padding-left: 0;
+}
+
+.perf-line.vocal-line.structure-marker {
+    color: #e09b2d;
+    font-weight: bold;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* Remove override de font-size vocal antigo */
+.performance-screen.vocal-mode .perf-line {
+    /* Sem override — usa o tamanho da classe acima */
 }
 
 /* Team View Tabs */
@@ -1718,4 +1741,3 @@ footer {
     .perf-controls { width: 100%; justify-content: center; font-size: 0.8rem; }
     .perf-content { padding: 20px 5%; }
 }
-
