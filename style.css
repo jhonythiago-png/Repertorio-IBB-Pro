@@ -1704,6 +1704,40 @@ footer {
     margin-top: 8px;
 }
 
+/* Controles de rolagem com velocidade */
+.scroll-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #222;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.scroll-controls button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 0.85rem;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: color 0.2s;
+}
+
+.scroll-controls button:hover {
+    color: var(--netflix-red);
+}
+
+#toggleScroll {
+    font-size: 1rem !important;
+    width: 28px !important;
+}
+
 /* Remove override de font-size vocal antigo */
 .performance-screen.vocal-mode .perf-line {
     /* Sem override — usa o tamanho da classe acima */
