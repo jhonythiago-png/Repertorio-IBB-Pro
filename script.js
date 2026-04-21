@@ -395,29 +395,43 @@ function renderPerformanceContent() {
             return;
         }
 
-        // 2. Identificar se a linha é INSTRUMENTAL (Cifras, Tabs, Marcações Técnicas)
-        const isCifraOrTab = isChordLineByHeuristic(line) || /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
+        // 2. Identificar se a linha é de acorde/tab (instrumental)
+        const isCifraOrTab = isChordLineByHeuristic(line) ||
+            /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
         
-        // Marcações Técnicas: [Solo], [Intro], Tab, etc.
-        const isTechnicalToRemove = /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) || 
-                                     trimmed.toLowerCase().includes('tab -') ||
-                                     /Parte \d de \d/i.test(trimmed);
+        // 3. Marcações técnicas instrumentais a remover no vocal
+        const isTechnicalToRemove =
+            /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental|Cifra|Riff|Violão|Guitarra|Baixo|Bateria)/i.test(trimmed) ||
+            trimmed.toLowerCase().startsWith('tab -') ||
+            /^e\|/.test(trimmed) || /^B\|/.test(trimmed) || /^G\|/.test(trimmed) ||
+            /^D\|/.test(trimmed) || /^A\|/.test(trimmed) ||
+            /Parte \d de \d/i.test(trimmed);
 
-        // Marcações de Estrutura (mantidas em ambos os modos)
-        const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Parte|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
+        // 4. Marcações de estrutura (mantidas em ambos os modos)
+        const isStructureMarker =
+            /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Parte|Primeira|Segunda|Terceira|Quarta|Pre[- ]?Refrão|Bridge|Pré)/i.test(trimmed);
 
-        // No modo vocal, removemos linhas de cifra e técnicas (exceto marcadores de estrutura)
+        // ── MODO VOCAL: só letra + marcadores de estrutura ──────────────
         if (currentPerformanceMode === 'vocal') {
             if ((isCifraOrTab || isTechnicalToRemove) && !isStructureMarker) return;
             displayLine = trimmed;
+
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'perf-line vocal-line';
+            if (isStructureMarker) lineDiv.classList.add('structure-marker');
+            lineDiv.textContent = displayLine || ' ';
+            content.appendChild(lineDiv);
+            return;
         }
 
+        // ── MODO MÚSICO: exibe tudo como Cifra Club ──────────────────────
         const lineDiv = document.createElement('div');
         lineDiv.className = 'perf-line';
         
-        // Realce amarelo para acordes (apenas no modo Músico)
-        if (currentPerformanceMode === 'musician' && (isCifraOrTab || (!isStructureMarker && isTechnicalToRemove))) {
+        if (isCifraOrTab || isTechnicalToRemove && !isStructureMarker) {
             lineDiv.classList.add('chord-line');
+        } else if (isStructureMarker) {
+            lineDiv.classList.add('structure-marker');
         }
         
         lineDiv.textContent = displayLine || ' ';
@@ -510,21 +524,25 @@ function isChordLineByHeuristic(line) {
     const trimmed = line.trim();
     if (!trimmed) return false;
 
-    // Se a linha tiver muitas letras minúsculas seguidas (palavras), provavelmente é letra
-    // Acordes costumam ter muitos espaços e letras maiúsculas isoladas
+    // Detecta linhas de tablatura (e|--, B|--, G|--, D|--, A|--, E|--)
+    if (/^[eEBGDAd]\|[\-\d\s\|pbrhx\/\(\)\~\>\.\*]+$/.test(trimmed)) return true;
+    // Linha de tab com só traços e números
+    if (/^[\-\d\s\|\(\)\~\>\.\/pbrhx\*]{5,}$/.test(trimmed) && /\d/.test(trimmed) && !/[a-záéíóúãõçà]/i.test(trimmed)) return true;
+
     const words = trimmed.split(/\s+/);
     let potentialChords = 0;
-    
+
     words.forEach(word => {
-        // Padrão básico de acorde: [A-G] seguido de modificadores opcionais 
-        // Adicionada detecção de Baixos com barra (ex: /G ou C/E)
-        if (/^[A-G][b#]?(?:m|maj|dim|aug|sus|add|[0-9]|M|\+|\-|\/|[A-G])*$/.test(word) || /^\/[A-G][b#]?$/.test(word)) {
+        // Acorde completo: A, Am, Cmaj7, F#m, Bb/D, /G, etc.
+        if (/^[A-G][b#]?(?:m|maj|min|dim|aug|sus|add|[0-9]|M|\+|\-|\/[A-G][b#]?)*$/.test(word) ||
+            /^\/[A-G][b#]?$/.test(word)) {
             potentialChords++;
         }
     });
 
-    // Se mais de 30% das "palavras" parecem acordes, ou a linha só tem acordes e símbolos
-    return potentialChords > 0 && (potentialChords / words.length) > 0.3;
+    // Linha de acorde: maioria das "palavras" são acordes e linha tem pouco texto minúsculo
+    const hasLowercaseWords = words.some(w => /[a-záéíóúãõçà]{3,}/.test(w));
+    return potentialChords > 0 && (potentialChords / words.length) > 0.3 && !hasLowercaseWords;
 }
 
 // Botão Voltar
