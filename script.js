@@ -346,6 +346,23 @@ function openPerformance(song, mode) {
     keyIndicator.textContent = originalKey;
     keyIndicator.dataset.original = originalKey;
 
+    // ── Player YouTube: carrega o vídeo da música e reseta visibilidade ──
+    const playerWrapper = document.getElementById('perfPlayerWrapper');
+    const playerIframe = document.getElementById('perfPlayerIframe');
+    const playerToggleBtn = document.getElementById('perfPlayerToggle');
+
+    if (song.vid_id) {
+        playerIframe.src = `https://www.youtube.com/embed/${song.vid_id}?autoplay=0`;
+        playerWrapper.style.display = 'none'; // começa oculto
+        playerToggleBtn.style.display = 'flex';
+        playerToggleBtn.innerHTML = '<i class="fas fa-music"></i>';
+        playerToggleBtn.title = 'Mostrar player';
+    } else {
+        playerIframe.src = '';
+        playerWrapper.style.display = 'none';
+        playerToggleBtn.style.display = 'none';
+    }
+
     renderPerformanceContent();
 
     screen.style.display = 'flex';
@@ -353,6 +370,27 @@ function openPerformance(song, mode) {
 
     document.getElementById('keySelectorGrid').style.display = 'none';
 }
+
+// ── Toggle do player YouTube ─────────────────────────────────────────
+document.getElementById('perfPlayerToggle').onclick = (e) => {
+    e.stopPropagation();
+    const wrapper = document.getElementById('perfPlayerWrapper');
+    const btn = document.getElementById('perfPlayerToggle');
+    const content = document.getElementById('performanceContent');
+    const isHidden = wrapper.style.display === 'none';
+
+    if (isHidden) {
+        wrapper.style.display = 'block';
+        btn.innerHTML = '<i class="fas fa-times"></i>';
+        btn.title = 'Ocultar player';
+        content.style.paddingTop = '0px'; // player está no flow, não precisa de padding extra
+    } else {
+        wrapper.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-music"></i>';
+        btn.title = 'Mostrar player';
+        content.style.paddingTop = '';
+    }
+};
 
 function renderPerformanceContent() {
     const content = document.getElementById('performanceContent');
@@ -374,8 +412,13 @@ function renderPerformanceContent() {
         let displayLine = line;
         const trimmed = line.trim();
         
-        // 1. Linhas vazias — preservar espaçamento original do Cifra Club
+        // 1. Linhas vazias — preservar espaçamento, mas no vocal evitar gaps excessivos
         if (trimmed === "") {
+            if (currentPerformanceMode === 'vocal') {
+                // No vocal, só adiciona linha vazia se a última linha adicionada não for vazia
+                const lastChild = content.lastElementChild;
+                if (lastChild && lastChild.classList.contains('empty-line')) return;
+            }
             const emptyDiv = document.createElement('div');
             emptyDiv.className = 'perf-line empty-line';
             emptyDiv.innerHTML = '&nbsp;';
@@ -538,6 +581,12 @@ document.getElementById('closePerfBtn').onclick = () => {
     document.getElementById('performanceScreen').style.display = 'none';
     document.body.style.overflow = '';
     stopAutoScroll();
+    // Para o vídeo ao fechar
+    const playerIframe = document.getElementById('perfPlayerIframe');
+    if (playerIframe) playerIframe.src = '';
+    // Reseta padding do content
+    const content = document.getElementById('performanceContent');
+    if (content) content.style.paddingTop = '';
 };
 
 // Os listeners de Zoom e Transposição antigos foram removidos para dar lugar à nova Grade Pro.
