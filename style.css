@@ -900,6 +900,61 @@ footer {
     gap: 10px;
 }
 
+/* ── Grid de botões de equipe ── */
+.team-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 480px;
+}
+
+/* Botão inativo — apagado para não confundir */
+.team-btn {
+    padding: 14px 8px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    background: #1a1a1a;
+    color: #444;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+    opacity: 0.45;
+}
+
+.team-btn:hover {
+    opacity: 0.75;
+    border-color: #666;
+    color: #999;
+}
+
+/* Botão ativo — cor da equipe, destaque máximo */
+.team-btn[data-team="Start"].team-btn-active    { background:#ff4757; border-color:#ff4757; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(255,71,87,0.6); transform: scale(1.05); }
+.team-btn[data-team="Amarelo"].team-btn-active  { background:#f1c40f; border-color:#f1c40f; color:#000; opacity:1; box-shadow: 0 0 18px rgba(241,196,15,0.6); transform: scale(1.05); }
+.team-btn[data-team="Laranja"].team-btn-active  { background:#e67e22; border-color:#e67e22; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(230,126,34,0.6); transform: scale(1.05); }
+.team-btn[data-team="Azul"].team-btn-active     { background:#3498db; border-color:#3498db; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(52,152,219,0.6); transform: scale(1.05); }
+.team-btn[data-team="Verde"].team-btn-active    { background:#2ecc71; border-color:#2ecc71; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(46,204,113,0.6); transform: scale(1.05); }
+.team-btn[data-team="Branco"].team-btn-active   { background:#f5f6fa; border-color:#f5f6fa; color:#000; opacity:1; box-shadow: 0 0 18px rgba(245,246,250,0.5); transform: scale(1.05); }
+
+/* Quando há um botão ativo, os outros ficam ainda mais apagados */
+.team-btn-grid:has(.team-btn-active) .team-btn:not(.team-btn-active) {
+    opacity: 0.2;
+}
+
+@media (max-width: 400px) {
+    .team-btn-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .team-btn {
+        padding: 16px 8px;
+        font-size: 0.9rem;
+    }
+}
+
 .team-selector {
     background: #222;
     border: 1px solid #444;
@@ -1744,6 +1799,90 @@ footer {
     margin-top: 8px;
 }
 
+/* Variável de tamanho de fonte — controlada via JS */
+#performanceContent {
+    --perf-font-size: 15px;
+}
+
+#performanceContent .perf-line,
+#performanceContent .vocal-line {
+    font-size: var(--perf-font-size) !important;
+}
+
+#performanceContent .chord-line {
+    font-size: calc(var(--perf-font-size) - 2px) !important;
+}
+
+#performanceContent .structure-marker {
+    font-size: calc(var(--perf-font-size) - 2px) !important;
+}
+
+/* Label do tamanho de fonte */
+.font-size-label {
+    font-size: 0.8rem;
+    color: #fff;
+    min-width: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Botão Wake Lock */
+/* Botão AO VIVO nas abas de equipe */
+.team-wake-lock-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid #e50914;
+    color: #e50914;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+
+.team-wake-lock-btn:hover {
+    background: rgba(229,9,20,0.12);
+}
+
+/* Bolinha indicadora */
+.live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e50914;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+/* Ativo — verde com pulso */
+.team-wake-lock-btn.wake-lock-active {
+    border-color: #2ecc71;
+    color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+    animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+.team-wake-lock-btn.wake-lock-active .live-dot {
+    background: #2ecc71;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+    0%, 100% { box-shadow: 0 0 6px rgba(46, 204, 113, 0.3); }
+    50%       { box-shadow: 0 0 16px rgba(46, 204, 113, 0.8); }
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+
 /* Controles de rolagem com + e - */
 .scroll-controls {
     display: flex;
@@ -1810,3 +1949,108 @@ footer {
     .perf-controls { width: 100%; justify-content: center; font-size: 0.8rem; }
     .perf-content { padding: 15px 5% 40px; }
 }
+
+
+
+/* ── Badge sem cifra no card ────────────────────────────── */
+.song-card { position: relative; }
+
+.no-lyrics-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(229,9,20,0.85);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 3px 6px;
+    border-radius: 4px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* ── Abas Vocal/Músico no modal da página inicial ───────── */
+.modal-perf-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.modal-perf-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #222;
+    border: 1px solid #444;
+    color: #888;
+    padding: 9px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.modal-perf-btn.active {
+    background: var(--netflix-red);
+    border-color: var(--netflix-red);
+    color: #fff;
+}
+
+.modal-perf-btn.live-btn {
+    border-color: #e50914;
+    color: #e50914;
+}
+
+.modal-perf-btn.live-btn.wake-lock-active {
+    border-color: #2ecc71;
+    color: #2ecc71;
+    animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+/* ── Contador nos botões de equipe ──────────────────────── */
+.team-btn { position: relative; }
+
+.team-count {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+.team-btn-active .team-count {
+    opacity: 1;
+    font-weight: 700;
+}
+
+/* ── Setas de reordenação na escala ─────────────────────── */
+.reorder-btns {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 3;
+}
+
+.reorder-btn {
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.reorder-btn:hover { background: var(--netflix-red); }
+
+/* ── Garantir position relative no setlist-card ────────── */
+.setlist-card { position: relative; }
