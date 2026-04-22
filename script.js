@@ -4,18 +4,23 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── Controle de Acesso de Líderes ───────────────────────────────────
-const TEAM_PASSWORDS = {
-    'ibbadm': 'Master', 
-    'start123': 'Start',
-    'amarelo123': 'Amarelo',
-    'laranja123': 'Laranja',
-    'azul123': 'Azul',
-    'verde123': 'Verde',
-    'branco123': 'Branco'
-};
-
+// Senhas validadas via Supabase — não ficam expostas no código-fonte
 const AUTH_KEY = 'ibb_leader_auth';
 const TEAM_KEY = 'ibb_leader_team';
+
+async function validatePasswordRemote(pwd) {
+    try {
+        const { data, error } = await _supabase
+            .from('app_passwords')
+            .select('team')
+            .eq('password_hash', pwd.trim().toLowerCase())
+            .single();
+        if (error || !data) return null;
+        return data.team;
+    } catch {
+        return null;
+    }
+}
 
 // --- MODO PERFORMANCE E CIFRAS ---
 const NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -190,7 +195,21 @@ function setAdminMode(active, teamName) {
     const addNavItem = document.getElementById('addSongNavItem');
     const editBtn   = document.getElementById('editUrlBtn');
     const editorPanel = document.getElementById('urlEditorPanel');
-    const addToSetlistBtn = document.getElementById('addToSetlistBtn');
+    // Sincroniza a nova ordem das músicas na escala via Supabase
+async function syncSetlistOrder(teamName, grid) {
+    const cards = grid.querySelectorAll('.setlist-card[data-setlist-id]');
+    const updates = Array.from(cards).map((card, i) => ({
+        id: parseInt(card.dataset.setlistId),
+        position: i + 1
+    }));
+    try {
+        for (const u of updates) {
+            await _supabase.from('setlists').update({ position: u.position }).eq('id', u.id);
+        }
+    } catch(e) { console.warn('Erro ao reordenar:', e); }
+}
+
+const addToSetlistBtn = document.getElementById('addToSetlistBtn');
     const teamAdminActions = document.getElementById('teamAdminActions');
     const teamAdminStatus = document.getElementById('teamAdminStatus');
 
@@ -249,17 +268,19 @@ const admBtn = document.getElementById('admBtn');
 async function handlePasswordSubmit() {
     const rawValue = pwInput.value || '';
     const pwd = rawValue.trim().toLowerCase();
-    
-    console.log('Tentativa de acesso ADM com:', pwd);
+    const submitBtn = document.getElementById('submitPasswordBtn');
+    if (submitBtn) submitBtn.textContent = 'Verificando...';
 
-    if (TEAM_PASSWORDS[pwd]) {
-        console.log('Senha correta para a equipe:', TEAM_PASSWORDS[pwd]);
+    const team = await validatePasswordRemote(pwd);
+
+    if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-unlock-alt"></i> Entrar';
+
+    if (team) {
+        console.log('Senha correta para a equipe:', team);
         pwGateModal.style.display = 'none';
         pwError.style.display = 'none';
-        
-        // Limpa antes de setar novo para evitar conflitos
         sessionStorage.removeItem(TEAM_KEY);
-        setAdminMode(true, TEAM_PASSWORDS[pwd]);
+        setAdminMode(true, team);
         
         // Refresh atual visualização se tiver na aba de equipes
         const currentTeamSelect = document.getElementById('teamSelector');
@@ -314,6 +335,9 @@ function openPerformance(song, mode) {
     // Resetar modo — Tom sempre visível em ambos os modos (vocal e músico)
     screen.classList.remove('vocal-mode');
     document.querySelectorAll('.control-group').forEach(g => g.style.display = 'flex');
+
+    // Resetar fonte para o tamanho padrão ao abrir nova música
+    applyFontSize(currentFontSize);
 
     if (mode === 'vocal') screen.classList.add('vocal-mode');
 
@@ -608,8 +632,12 @@ function startAutoScroll() {
     const btn = document.getElementById('toggleScroll');
     if (btn) btn.innerHTML = '<i class="fas fa-pause"></i>';
     clearInterval(autoScrollInterval);
-    // speed 1 → 100ms/px  |  speed 10 → 10ms/px
     autoScrollInterval = setInterval(() => {
+        // Para automaticamente ao chegar no final
+        if (content.scrollTop + content.clientHeight >= content.scrollHeight - 4) {
+            stopAutoScroll();
+            return;
+        }
         content.scrollTop += 1;
     }, Math.round(110 - scrollSpeed * 10));
 }
@@ -630,6 +658,70 @@ document.getElementById('scrollFaster').onclick = () => {
 document.getElementById('scrollSlower').onclick = () => {
     if (scrollSpeed > 1) { scrollSpeed--; if (autoScrollInterval) startAutoScroll(); }
 };
+
+// ── Controle de tamanho de fonte ─────────────────────────────────────
+let currentFontSize = 15; // px — padrão igual ao Cifra Club
+const FONT_MIN = 10;
+const FONT_MAX = 28;
+
+function applyFontSize(size) {
+    currentFontSize = Math.min(FONT_MAX, Math.max(FONT_MIN, size));
+    const content = document.getElementById('performanceContent');
+    if (content) {
+        content.style.setProperty('--perf-font-size', currentFontSize + 'px');
+    }
+    const label = document.getElementById('fontSizeLabel');
+    if (label) label.textContent = currentFontSize;
+}
+
+document.getElementById('fontIncrease').onclick = () => applyFontSize(currentFontSize + 1);
+document.getElementById('fontDecrease').onclick = () => applyFontSize(currentFontSize - 1);
+
+// ── Wake Lock — mantém tela acesa durante a performance ──────────────
+let wakeLock = null;
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        const btn = document.getElementById('teamWakeLockBtn');
+        if (btn) { btn.classList.add('wake-lock-active'); btn.title = 'AO VIVO ativo — toque para desativar'; }
+        wakeLock.addEventListener('release', () => {
+            const b = document.getElementById('teamWakeLockBtn');
+            if (b) { b.classList.remove('wake-lock-active'); b.title = 'Manter tela acesa durante a escala'; }
+            wakeLock = null;
+        });
+    } catch (err) {
+        console.warn('Wake Lock não suportado ou negado:', err.message);
+        alert('Não foi possível ativar o modo AO VIVO. Desative o bloqueio automático nas configurações do dispositivo.');
+    }
+}
+
+function releaseWakeLock() {
+    if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+    }
+    const btn = document.getElementById('teamWakeLockBtn');
+    if (btn) { btn.classList.remove('wake-lock-active'); btn.title = 'Manter tela acesa durante a escala'; }
+}
+
+document.getElementById('teamWakeLockBtn').onclick = () => {
+    if (wakeLock) {
+        releaseWakeLock();
+    } else {
+        requestWakeLock();
+    }
+};
+
+// Reativa wake lock ao voltar para o app (sistema pode liberar em background)
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && wakeLock === null) {
+        const btn = document.getElementById('teamWakeLockBtn');
+        if (btn && btn.classList.contains('wake-lock-active')) {
+            await requestWakeLock();
+        }
+    }
+});
 
 // Capturar Cifra Automaticamente (ADM)
 const btnCapturar = document.getElementById('btnCapturarCifra');
@@ -728,7 +820,8 @@ async function fetchData() {
         renderRepertoire(repertoireData);
         populateCategoryMenu();
         updateFooter();
-        initAdminState(); // Respeita estado de auth entre navegações
+        initAdminState();
+        loadAllTeamCounts(); // Atualiza contadores nos botões de equipe
     } catch (error) {
         console.error("Erro ao carregar dados do Supabase:", error);
         // Fallback para JSON local se o banco falhar (opcional)
@@ -794,8 +887,13 @@ function renderRepertoire(data) {
 function createSongCard(song) {
     const card = document.createElement('div');
     card.className = 'song-card';
+    const hasCifra = song.cifra_text && song.cifra_text.trim().length > 10;
+    const noLyricsWarning = !hasCifra
+        ? `<span class="no-lyrics-badge" title="Sem letra cadastrada"><i class="fas fa-exclamation-triangle"></i></span>`
+        : '';
     card.innerHTML = `
         <img src="${getYouTubeThumbnail(song)}" alt="${song.title}" loading="lazy">
+        ${noLyricsWarning}
         <div class="card-info">
             <h4>${song.title}</h4>
             <p>${song.artist || 'Vários'} ${song.status ? '• ' + song.status : ''}</p>
@@ -870,6 +968,23 @@ function openVideo(song) {
     
     if (videoIframe) videoIframe.src = finalUrl;
     if (modal) modal.style.display = 'block';
+
+    // ── Abas Vocal/Músico no modal da página inicial ──────────────────
+    const modalPerf = document.getElementById('modalPerfTabs');
+    if (modalPerf) {
+        modalPerf.style.display = song.cifra_text && song.cifra_text.trim().length > 10 ? 'flex' : 'none';
+        // Resetar aba ativa para Vocal
+        modalPerf.querySelectorAll('.modal-perf-btn').forEach(b => b.classList.remove('active'));
+        const vocalBtn = modalPerf.querySelector('[data-mode="vocal"]');
+        if (vocalBtn) vocalBtn.classList.add('active');
+    }
+    // Guarda a música atual para os botões de performance do modal
+    window._modalCurrentSong = song;
+    // Mostra botão "Ver Letra" se tiver cifra
+    const perfBtn = document.getElementById('modalOpenPerfBtn');
+    if (perfBtn) {
+        perfBtn.style.display = song.cifra_text && song.cifra_text.trim().length > 10 ? 'block' : 'none';
+    }
 
     // Resetar painel de edição
     const urlEditorPanel = document.getElementById('urlEditorPanel');
@@ -1249,13 +1364,39 @@ searchInput.oninput = (e) => {
     });
     const uniqueSongs = Array.from(uniqueSongsMap.values());
 
-    const filtered = uniqueSongs.filter(song => 
-        song.status !== 'DELETED' && (
-            song.title.toLowerCase().includes(term) || 
-            (song.artist && song.artist.toLowerCase().includes(term))
-        )
-    );
-    renderGrid(filtered, `Resultados para: "${term}"`);
+    // Busca por categoria (ex: "consagração") ou por tom (ex: "tom: D" ou "em D")
+    const catMatch = ALL_CATEGORIES.find(c => c.toLowerCase().includes(term));
+    const keyTermMatch = term.match(/^(?:tom[:\s]+)?([a-g][b#]?m?)$/i);
+
+    let filtered;
+    let searchLabel;
+
+    if (catMatch && term.length >= 3) {
+        // Busca por categoria
+        filtered = uniqueSongs.filter(s =>
+            s.status !== 'DELETED' &&
+            Array.isArray(s.categories) && s.categories.some(c => c.toLowerCase().includes(term))
+        );
+        searchLabel = `Categoria: "${catMatch}"`;
+    } else if (keyTermMatch) {
+        // Busca por tom na obs da música (ex: "Tom D", "Tom: D")
+        const keySearch = keyTermMatch[1].toLowerCase();
+        filtered = uniqueSongs.filter(s =>
+            s.status !== 'DELETED' &&
+            s.obs && s.obs.toLowerCase().includes(keySearch)
+        );
+        searchLabel = `Tom: "${keyTermMatch[1].toUpperCase()}"`;
+    } else {
+        // Busca padrão por título/artista
+        filtered = uniqueSongs.filter(song =>
+            song.status !== 'DELETED' && (
+                song.title.toLowerCase().includes(term) ||
+                (song.artist && song.artist.toLowerCase().includes(term))
+            )
+        );
+        searchLabel = `Resultados para: "${term}"`;
+    }
+    renderGrid(filtered, searchLabel);
 };
 
 function resetView() {
@@ -1277,9 +1418,10 @@ function updateFooter() {
 }
 
 // Nav Listeners
-document.getElementById('homeNav').onclick = (e) => { e.preventDefault(); resetView(); };
+document.getElementById('homeNav').onclick = (e) => { e.preventDefault(); releaseWakeLock(); resetView(); };
 document.getElementById('categoriesNav').onclick = (e) => {
     e.preventDefault();
+    releaseWakeLock();
     categoryOverlay.style.display = 'block';
     document.getElementById('hero').style.display = 'none';
     categoriesContainer.style.display = 'none';
@@ -1289,6 +1431,7 @@ document.getElementById('categoriesNav').onclick = (e) => {
 };
 document.getElementById('newNav').onclick = (e) => {
     e.preventDefault();
+    releaseWakeLock();
     const teamsCont = document.getElementById('teamsContainer');
     if(teamsCont) teamsCont.style.display = 'none';
     const songs = repertoireData.find(c => c.category === "Novos")?.items || [];
@@ -1298,16 +1441,24 @@ document.getElementById('newNav').onclick = (e) => {
 // --- Setlist Logic ---
 
 function applyTeamColorToSelector(teamName) {
+    // Atualiza o select oculto (mantém compatibilidade com lógica existente)
     const TS = document.getElementById('teamSelector');
-    if (!TS) return;
-    
-    // Remover classes de cores anteriores
-    TS.classList.remove('team-selected-Start', 'team-selected-Amarelo', 'team-selected-Laranja', 'team-selected-Azul', 'team-selected-Verde', 'team-selected-Branco');
-    
-    // Adiciona classe de cor para o atual, se houver
-    if (teamName) {
-        TS.classList.add('team-selected-' + teamName);
-    }
+    if (TS) TS.value = teamName || '';
+
+    // Atualiza os botões visuais
+    document.querySelectorAll('.team-btn').forEach(btn => {
+        if (btn.dataset.team === teamName) {
+            btn.classList.add('team-btn-active');
+            btn.setAttribute('aria-pressed', 'true');
+        } else {
+            btn.classList.remove('team-btn-active');
+            btn.setAttribute('aria-pressed', 'false');
+        }
+    });
+
+    // Mostra/oculta título ao selecionar equipe
+    const title = document.getElementById('teamsTitle');
+    if (title) title.style.display = teamName ? 'none' : 'flex';
 }
 
 document.getElementById('teamsNav').onclick = (e) => {
@@ -1323,6 +1474,10 @@ document.getElementById('teamsNav').onclick = (e) => {
     if(activeTeam && activeTeam !== 'Master' && !TS.value) {
         TS.value = activeTeam;
     }
+
+    // Restaurar título se nenhuma equipe selecionada
+    const title = document.getElementById('teamsTitle');
+    if (title) title.style.display = TS.value ? 'none' : 'flex';
 
     const currentTeam = TS.value;
     if(currentTeam) {
@@ -1357,8 +1512,37 @@ document.getElementById('teamSelector').onchange = (e) => {
     const teamName = e.target.value;
     applyTeamColorToSelector(teamName);
     loadSetlist(teamName);
-    document.getElementById('teamSubTabs').style.display = 'flex'; // Mostrar abas
+    document.getElementById('teamSubTabs').style.display = 'flex';
 };
+
+// Listeners dos botões visuais de equipe
+document.querySelectorAll('.team-btn').forEach(btn => {
+    btn.onclick = () => {
+        const teamName = btn.dataset.team;
+        applyTeamColorToSelector(teamName);
+        loadSetlist(teamName);
+        document.getElementById('teamSubTabs').style.display = 'flex';
+    };
+});
+
+async function loadAllTeamCounts() {
+    const teams = ['Start','Amarelo','Laranja','Azul','Verde','Branco'];
+    try {
+        const { data } = await _supabase.from('setlists').select('team');
+        if (!data) return;
+        const counts = {};
+        data.forEach(r => { counts[r.team] = (counts[r.team] || 0) + 1; });
+        teams.forEach(team => {
+            const btn = document.querySelector(`.team-btn[data-team="${team}"]`);
+            if (!btn) return;
+            const count = counts[team] || 0;
+            const label = btn.querySelector('.team-count') || document.createElement('span');
+            label.className = 'team-count';
+            label.textContent = count > 0 ? count : '';
+            if (!btn.querySelector('.team-count')) btn.appendChild(label);
+        });
+    } catch(e) { console.warn('Erro ao carregar contadores:', e); }
+}
 
 async function loadSetlist(teamName) {
     const grid = document.getElementById('teamSetlistGrid');
@@ -1407,13 +1591,35 @@ async function loadSetlist(teamName) {
                 const songClone = { ...originalSong, obs: setItem.obs };
                 const card = createSongCard(songClone);
                 card.classList.add('setlist-card');
+                card.dataset.setlistId = setItem.id;
                 
                 if (setItem.obs) {
                     const infoDiv = card.querySelector('.card-info');
                     infoDiv.innerHTML += `<p class="setlist-obs">[ ${setItem.obs} ]</p>`;
                 }
+
+                // Setas de reordenação (só ADM)
+                if (auth && (loggedTeam === 'Master' || loggedTeam === teamName)) {
+                    const reorderDiv = document.createElement('div');
+                    reorderDiv.className = 'reorder-btns';
+                    reorderDiv.innerHTML = `
+                        <button class="reorder-btn up-btn" title="Mover para cima"><i class="fas fa-chevron-up"></i></button>
+                        <button class="reorder-btn down-btn" title="Mover para baixo"><i class="fas fa-chevron-down"></i></button>`;
+                    reorderDiv.querySelector('.up-btn').onclick = (e) => {
+                        e.stopPropagation();
+                        const prev = card.previousElementSibling;
+                        if (prev) grid.insertBefore(card, prev);
+                        syncSetlistOrder(teamName, grid);
+                    };
+                    reorderDiv.querySelector('.down-btn').onclick = (e) => {
+                        e.stopPropagation();
+                        const next = card.nextElementSibling;
+                        if (next) grid.insertBefore(next, card);
+                        syncSetlistOrder(teamName, grid);
+                    };
+                    card.appendChild(reorderDiv);
+                }
                 
-                // Mudar comportamento do clique para abrir a PERFORMANCE na escala
                 card.onclick = (e) => {
                     e.stopPropagation();
                     openPerformance(originalSong, currentPerformanceMode);
@@ -1606,6 +1812,47 @@ window.openHeroVideo = function() {
         alert("Nenhum vídeo disponível no momento.");
     }
 };
+
+// ── Listeners das abas Vocal/Músico no modal da página inicial ───────
+document.querySelectorAll('.modal-perf-btn[data-mode]').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.modal-perf-btn[data-mode]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    };
+});
+
+document.getElementById('modalLiveBtn').onclick = () => {
+    const btn = document.getElementById('modalLiveBtn');
+    if (wakeLock) {
+        releaseWakeLock();
+        btn.classList.remove('wake-lock-active');
+    } else {
+        requestWakeLock();
+        btn.classList.add('wake-lock-active');
+    }
+};
+
+// Botão "Assistir" no modal abre a performance com o modo selecionado
+const modalInfo = document.querySelector('.modal-info');
+if (modalInfo) {
+    // Cria botão de abrir performance se não existir
+    const perfBtn = document.createElement('button');
+    perfBtn.id = 'modalOpenPerfBtn';
+    perfBtn.className = 'save-url-btn';
+    perfBtn.style.cssText = 'margin-top:10px; width:100%; display:none;';
+    perfBtn.innerHTML = '<i class="fas fa-book-open"></i> Ver Letra / Cifra';
+    perfBtn.onclick = () => {
+        if (!window._modalCurrentSong) return;
+        const activeBtn = document.querySelector('.modal-perf-btn[data-mode].active');
+        const mode = activeBtn ? activeBtn.dataset.mode : 'vocal';
+        modal.style.display = 'none';
+        videoIframe.src = '';
+        openPerformance(window._modalCurrentSong, mode);
+    };
+    // Inserir antes do setlist panel
+    const setPanel = document.getElementById('setlistEditorPanel');
+    if (setPanel) modalInfo.insertBefore(perfBtn, setPanel);
+}
 
 // Inicialização segura
 window.addEventListener('DOMContentLoaded', () => {
