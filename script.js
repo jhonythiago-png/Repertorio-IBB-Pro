@@ -650,6 +650,14 @@ async function fetchData() {
                     grouped[cat].push(song);
                 });
             }
+            // FIX: músicas com status NOVA também aparecem na categoria "Novos"
+            // independente de terem 'Novos' no array categories[]
+            if (song.status === 'NOVA' && !cats.includes('Novos')) {
+                if (!grouped['Novos']) grouped['Novos'] = [];
+                if (!grouped['Novos'].find(s => s.id === song.id || s.title === song.title)) {
+                    grouped['Novos'].push(song);
+                }
+            }
         });
 
         // Ordenar mantendo a prioridade das FIXAS e depois as DINAMICAS
@@ -1688,7 +1696,9 @@ async function updateTeamBadges() {
 function applyFontSize(size) {
     currentFontSize = Math.max(10, Math.min(28, size));
     const c = document.getElementById('performanceContent');
-    if (c) c.style.fontSize = currentFontSize + 'px';
+    // O CSS usa var(--perf-font-size) !important nas .perf-line,
+    // então precisamos setar a CSS variable, não o font-size do container
+    if (c) c.style.setProperty('--perf-font-size', currentFontSize + 'px');
     const lbl = document.getElementById('fontSizeLabel');
     if (lbl) lbl.textContent = currentFontSize;
 }
