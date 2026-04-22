@@ -33,6 +33,7 @@ let currentPerformanceMode = 'vocal'; // 'vocal' ou 'musician'
 let currentTransposeSemitones = 0;
 let autoScrollInterval = null;
 let currentZoomLevel = 1.0;
+let currentFontSize = 15; // tamanho padrão da fonte na tela de performance
 // ---------------------------------
 
 // --- Motores de Captura e Transposição ---
@@ -310,6 +311,9 @@ function openPerformance(song, mode) {
     currentPerformanceMode = mode;
     currentTransposeSemitones = 0;
     currentZoomLevel = 1.0;
+    currentFontSize = 15;
+    const fontLabel = document.getElementById('fontSizeLabel');
+    if (fontLabel) fontLabel.textContent = '15';
 
     const screen = document.getElementById('performanceScreen');
     const content = document.getElementById('performanceContent');
@@ -392,17 +396,18 @@ function renderPerformanceContent() {
         // 2. Identificar se a linha é INSTRUMENTAL (Cifras, Tabs, Marcações Técnicas)
         const isCifraOrTab = isChordLineByHeuristic(line) || /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
         
-        // Marcações Técnicas: [Solo], [Intro], Tab, etc.
-        const isTechnicalToRemove = /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) || 
-                                     trimmed.toLowerCase().includes('tab -') ||
-                                     /Parte \d de \d/i.test(trimmed);
+        // Marcações que NUNCA devem aparecer no vocal (nem mesmo se forem "estrutura")
+        const isAlwaysHidden = /Parte\s+\d+\s+de\s+\d+/i.test(trimmed) ||
+                               /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) ||
+                               trimmed.toLowerCase().includes('tab -');
 
-        // Marcações de Estrutura (mantidas em ambos os modos)
-        const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Parte|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
+        // Marcações de Estrutura visíveis no vocal: Refrão, Verso, Coro, Ponte, Final
+        const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
 
-        // No modo vocal, removemos linhas de cifra e técnicas (exceto marcadores de estrutura)
+        // No modo vocal: remove cifras, tabs e marcações técnicas — nunca mostra "Parte X de Y"
         if (currentPerformanceMode === 'vocal') {
-            if ((isCifraOrTab || isTechnicalToRemove) && !isStructureMarker) return;
+            if (isAlwaysHidden) return;
+            if (isCifraOrTab && !isStructureMarker) return;
             displayLine = trimmed;
         }
 
@@ -534,7 +539,7 @@ document.getElementById('closePerfBtn').onclick = () => {
 };
 
 // ── Controles de Tamanho de Fonte ─────────────────────────────────────
-let currentFontSize = 15;
+// (currentFontSize declarado globalmente no topo do arquivo)
 
 function applyFontSize(size) {
     currentFontSize = Math.max(10, Math.min(28, size));
@@ -810,7 +815,7 @@ function openVideo(song) {
     let finalUrl = song.url || '';
     const idMatch = finalUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|shorts\/)([^&?#/ ]+)/);
     if (idMatch) {
-        finalUrl = `https://www.youtube.com/embed/${idMatch[1]}?autoplay=1`;
+        finalUrl = `https://www.youtube.com/embed/${idMatch[1]}`;
     }
 
     const mTitle = document.getElementById('modalTitle');
@@ -1563,22 +1568,24 @@ async function updateTeamBadges() {
     const teams = ['Start', 'Amarelo', 'Laranja', 'Azul', 'Verde', 'Branco'];
     for (const team of teams) {
         try {
-            const { count } = await _supabase
+            const { data, error } = await _supabase
                 .from('setlists')
-                .select('id', { count: 'exact', head: true })
+                .select('id')
                 .eq('team', team);
+            if (error) continue;
+            const count = (data || []).length;
             const btn = document.querySelector(`.team-btn[data-team="${team}"]`);
             if (!btn) continue;
-            let existingBadge = btn.querySelector('.team-count-badge');
+            let badge = btn.querySelector('.team-count-badge');
             if (count > 0) {
-                if (!existingBadge) {
-                    existingBadge = document.createElement('span');
-                    existingBadge.className = 'team-count-badge';
-                    btn.appendChild(existingBadge);
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'team-count-badge';
+                    btn.appendChild(badge);
                 }
-                existingBadge.textContent = count;
-            } else if (existingBadge) {
-                existingBadge.remove();
+                badge.textContent = count;
+            } else {
+                if (badge) badge.remove();
             }
         } catch (_) {}
     }
@@ -1645,6 +1652,28 @@ if(saveSetlistBtn) {
 
 const clearSetlistBtn = document.getElementById('clearSetlistBtn');
 if(clearSetlistBtn) {
+
+// ── Botão Reordenar: toggle visual do modo drag ──────────────────────
+const reorderSetlistBtn = document.getElementById('reorderSetlistBtn');
+if (reorderSetlistBtn) {
+    let reorderActive = false;
+    reorderSetlistBtn.addEventListener('click', () => {
+        reorderActive = !reorderActive;
+        reorderSetlistBtn.style.background = reorderActive ? '#e74c3c' : '#27ae60';
+        reorderSetlistBtn.innerHTML = reorderActive
+            ? '<i class="fas fa-check"></i> Salvo automaticamente'
+            : '<i class="fas fa-arrows-alt-v"></i> Reordenar';
+        document.querySelectorAll('#teamSetlistGrid .setlist-card').forEach(card => {
+            card.style.outline = reorderActive ? '1px dashed rgba(255,255,255,0.3)' : '';
+        });
+        if (!reorderActive) {
+            setTimeout(() => {
+                reorderSetlistBtn.innerHTML = '<i class="fas fa-arrows-alt-v"></i> Reordenar';
+                reorderSetlistBtn.style.background = '#27ae60';
+            }, 2000);
+        }
+    });
+}
     clearSetlistBtn.onclick = async () => {
         const team = document.getElementById('teamSelector').value;
         if(!team) return;
