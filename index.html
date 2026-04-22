@@ -11,7 +11,8 @@
     <link rel="apple-touch-icon" href="hero_banner.png">
     <meta name="theme-color" content="#141414">
     
-    <link rel="stylesheet" href="style.css?v=18">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css?v=19">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -107,22 +108,27 @@
         <!-- Painel de Equipes -->
         <div id="teamsContainer" style="display:none;" class="teams-container">
             <div class="teams-header">
-                <h2><i class="fas fa-users"></i> Escalas por Equipe</h2>
-                <select id="teamSelector" class="team-selector">
-                    <option value="" disabled selected>Selecione a Equipe</option>
-                    <option value="Start" class="opt-start">Start</option>
-                    <option value="Amarelo" class="opt-amarelo">Amarelo</option>
-                    <option value="Laranja" class="opt-laranja">Laranja</option>
-                    <option value="Azul" class="opt-azul">Azul</option>
-                    <option value="Verde" class="opt-verde">Verde</option>
-                    <option value="Branco" class="opt-branco">Branco</option>
-                </select>
+                <h2 id="teamsTitle"><i class="fas fa-users"></i> Escalas por Equipe</h2>
+                <!-- Seletor visual de equipes — substitui o <select> nativo -->
+                <div class="team-btn-grid" id="teamBtnGrid">
+                    <button class="team-btn" data-team="Start">Start</button>
+                    <button class="team-btn" data-team="Amarelo">Amarelo</button>
+                    <button class="team-btn" data-team="Laranja">Laranja</button>
+                    <button class="team-btn" data-team="Azul">Azul</button>
+                    <button class="team-btn" data-team="Verde">Verde</button>
+                    <button class="team-btn" data-team="Branco">Branco</button>
+                </div>
+                <!-- select oculto mantido para compatibilidade com o JS existente -->
+                <select id="teamSelector" class="team-selector" style="display:none;"></select>
                 <p id="teamAdminStatus" style="display:none; color:#2ecc71; font-size:12px; margin-top:5px;"><i class="fas fa-unlock"></i> Modo Edição Ativo</p>
                 
                 <!-- Sub-abas Vocal/Músicos -->
                 <div class="team-sub-tabs" id="teamSubTabs" style="display:none; margin-top: 20px;">
                     <button class="sub-tab-btn active" data-mode="vocal"><i class="fas fa-microphone"></i> Vocal</button>
                     <button class="sub-tab-btn" data-mode="musician"><i class="fas fa-guitar"></i> Músicos</button>
+                    <button id="teamWakeLockBtn" class="team-wake-lock-btn" title="Manter tela acesa durante a escala">
+                        <span class="live-dot"></span> AO VIVO
+                    </button>
                 </div>
 
                 <div class="team-actions" style="display:none;" id="teamAdminActions">
@@ -159,6 +165,12 @@
                 <div class="modal-actions">
                     <button id="addToSetlistBtn" title="Adicionar à Escala" style="display:none;"><i class="fas fa-list-ul"></i> Escalar</button>
                     <button id="editUrlBtn" title="Editar URL do vídeo" style="display:none;"><i class="fas fa-edit"></i> Editar Versão</button>
+                </div>
+                <!-- Abas Vocal/Músico no modal da página inicial -->
+                <div id="modalPerfTabs" class="modal-perf-tabs" style="display:none;">
+                    <button class="modal-perf-btn active" data-mode="vocal"><i class="fas fa-microphone"></i> Vocal</button>
+                    <button class="modal-perf-btn" data-mode="musician"><i class="fas fa-guitar"></i> Músicos</button>
+                    <button id="modalLiveBtn" class="modal-perf-btn live-btn"><span class="live-dot"></span> AO VIVO</button>
                 </div>
                 
                 <!-- Painel de Adição à Escala -->
@@ -318,6 +330,14 @@
                     <button class="restore-key-btn" id="restoreKey">Restaurar tom inicial</button>
                 </div>
                 <div class="control-group">
+                    <span class="control-label">Fonte</span>
+                    <div class="scroll-controls">
+                        <button id="fontDecrease" title="Diminuir fonte"><i class="fas fa-minus"></i></button>
+                        <span id="fontSizeLabel" class="font-size-label">15</span>
+                        <button id="fontIncrease" title="Aumentar fonte"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div class="control-group">
                     <span class="control-label">Rolagem</span>
                     <div class="scroll-controls">
                         <button id="scrollSlower" title="Mais lento"><i class="fas fa-minus"></i></button>
@@ -342,6 +362,11 @@
         </div>
     </div>
 
-    <script src="script.js?v=PRO_DEFINITIVO_V2"></script>
+    <script src="script.js?v=PRO_DEFINITIVO_V3"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>
