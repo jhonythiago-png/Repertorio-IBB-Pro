@@ -284,6 +284,12 @@
             </div>
             <div class="perf-controls">
                 <div class="control-group">
+                    <span class="control-label">Player</span>
+                    <button id="perfPlayerToggle" class="player-toggle-btn" style="display:none;" title="Mostrar player">
+                        <i class="fas fa-music"></i>
+                    </button>
+                </div>
+                <div class="control-group">
                     <span class="control-label">Tom</span>
                     <div class="transpose-btns">
                         <button id="perfKeyDisplay" class="key-selector-trigger">Original</button>
@@ -321,6 +327,16 @@
                 </div>
             </div>
         </header>
+        <!-- Player YouTube colapsável -->
+        <div id="perfPlayerWrapper" class="perf-player-wrapper" style="display:none;">
+            <iframe id="perfPlayerIframe"
+                src=""
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+
         <div id="performanceContent" class="perf-content">
             <!-- Letra e Cifra renderizadas aqui -->
         </div>
