@@ -1,80 +1,63 @@
-// ── Repertório IBB — Service Worker ──────────────────────────────────
-// Cache os arquivos estáticos para funcionamento offline
+// ── Repertório IBB — Service Worker v5 ───────────────────────────────
+// Estratégia: Network First para tudo (JS/CSS/HTML sempre frescos)
+// Cache apenas como fallback offline
 
-const CACHE_NAME = 'ibb-repertorio-v4';
+const CACHE_NAME = 'ibb-repertorio-v5';
 
-// Arquivos essenciais que ficam disponíveis offline
-// IMPORTANTE: os query-strings devem bater exatamente com os do index.html
-const STATIC_ASSETS = [
-    './',
-    './index.html',
-    './script.js?v=PRO_DEFINITIVO_V3',
-    './style.css?v=19',
-    './hero_banner.png',
-    './manifest.json',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-    'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
+const NEVER_CACHE = [
+    'supabase.co',
+    'youtube.com',
+    'youtu.be',
+    'ytimg.com'
 ];
 
-// ── Install: cacheia arquivos estáticos ───────────────────────────────
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS).catch((err) => {
-                console.warn('[SW] Alguns assets não puderam ser cacheados:', err);
-            });
-        })
-    );
+// ── Install: ativa imediatamente sem esperar ─────────────────────────
+self.addEventListener('install', () => {
     self.skipWaiting();
 });
 
-// ── Activate: limpa caches antigos ───────────────────────────────────
+// ── Activate: limpa TODOS os caches anteriores ───────────────────────
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) =>
-            Promise.all(
-                keys
-                    .filter((key) => key !== CACHE_NAME)
-                    .map((key) => caches.delete(key))
-            )
+            Promise.all(keys.map((key) => caches.delete(key)))
         )
     );
     self.clients.claim();
 });
 
-// ── Fetch: Network First para Supabase, Cache First para estáticos ───
+// ── Fetch: Network First — cache só como fallback offline ─────────────
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // Supabase e YouTube: sempre tenta rede, sem cache
-    if (
-        url.hostname.includes('supabase.co') ||
-        url.hostname.includes('youtube.com') ||
-        url.hostname.includes('youtu.be') ||
-        url.hostname.includes('ytimg.com')
-    ) {
-        event.respondWith(fetch(event.request).catch(() => new Response('', { status: 503 })));
+    // APIs externas: nunca cacheia, passa direto
+    if (NEVER_CACHE.some(h => url.hostname.includes(h))) {
+        event.respondWith(
+            fetch(event.request).catch(() => new Response('', { status: 503 }))
+        );
         return;
     }
 
-    // Arquivos estáticos: Cache First com fallback para rede
+    // Tudo mais: tenta rede primeiro, fallback no cache
     event.respondWith(
-        caches.match(event.request).then((cached) => {
-            if (cached) return cached;
-            return fetch(event.request).then((response) => {
-                // Cacheia respostas bem-sucedidas de recursos estáticos
+        fetch(event.request)
+            .then((response) => {
+                // Salva cópia nova no cache só se bem-sucedido
                 if (response && response.status === 200 && event.request.method === 'GET') {
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                 }
                 return response;
-            }).catch(() => {
-                // Offline fallback: retorna index.html para navegação
-                if (event.request.mode === 'navigate') {
-                    return caches.match('./index.html');
-                }
-                return new Response('', { status: 503 });
-            });
-        })
+            })
+            .catch(() => {
+                // Offline: tenta servir do cache
+                return caches.match(event.request).then((cached) => {
+                    if (cached) return cached;
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
+                    return new Response('', { status: 503 });
+                });
+            })
     );
 });
