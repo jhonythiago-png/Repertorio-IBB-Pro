@@ -415,7 +415,7 @@ function renderPerformanceContent() {
         lineDiv.className = 'perf-line';
         
         // Realce amarelo para acordes (apenas no modo Músico)
-        if (currentPerformanceMode === 'musician' && (isCifraOrTab || (!isStructureMarker && isTechnicalToRemove))) {
+        if (currentPerformanceMode === 'musician' && (isCifraOrTab || isAlwaysHidden)) {
             lineDiv.classList.add('chord-line');
         }
         
@@ -423,10 +423,9 @@ function renderPerformanceContent() {
         content.appendChild(lineDiv);
     });
 
-    // Restaura o tamanho de fonte definido pelo usuário após cada render
-    if (typeof currentFontSize !== 'undefined' && currentFontSize !== 15) {
-        content.style.fontSize = currentFontSize + 'px';
-    }
+    // Aplica sempre o tamanho de fonte atual após cada render
+    const content2 = document.getElementById('performanceContent');
+    if (content2) content2.style.fontSize = currentFontSize + 'px';
 }
 
 // ── LÓGICA DE TRANSPOSIÇÃO PRO ───────────────────────────────────────
@@ -1247,24 +1246,28 @@ function updateFooter() {
     }
 }
 
-// Nav Listeners
-document.getElementById('homeNav').onclick = (e) => { e.preventDefault(); resetView(); };
-document.getElementById('categoriesNav').onclick = (e) => {
-    e.preventDefault();
-    categoryOverlay.style.display = 'block';
-    document.getElementById('hero').style.display = 'none';
-    categoriesContainer.style.display = 'none';
-    searchResultsGrid.style.display = 'none';
-    const teamsCont = document.getElementById('teamsContainer');
-    if(teamsCont) teamsCont.style.display = 'none';
-};
-document.getElementById('newNav').onclick = (e) => {
-    e.preventDefault();
-    const teamsCont = document.getElementById('teamsContainer');
-    if(teamsCont) teamsCont.style.display = 'none';
-    const songs = repertoireData.find(c => c.category === "Novos")?.items || [];
-    renderGrid(songs, "Novos Lançamentos");
-};
+// Nav Listeners — registrados via addEventListener para garantir que o DOM está pronto
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('homeNav').onclick = (e) => { e.preventDefault(); resetView(); };
+
+    document.getElementById('categoriesNav').onclick = (e) => {
+        e.preventDefault();
+        categoryOverlay.style.display = 'block';
+        document.getElementById('hero').style.display = 'none';
+        categoriesContainer.style.display = 'none';
+        searchResultsGrid.style.display = 'none';
+        const teamsCont = document.getElementById('teamsContainer');
+        if (teamsCont) teamsCont.style.display = 'none';
+    };
+
+    document.getElementById('newNav').onclick = (e) => {
+        e.preventDefault();
+        const teamsCont = document.getElementById('teamsContainer');
+        if (teamsCont) teamsCont.style.display = 'none';
+        const songs = repertoireData.find(c => c.category === 'Novos')?.items || [];
+        renderGrid(songs, 'Novos Lançamentos');
+    };
+});
 
 // --- Setlist Logic ---
 
