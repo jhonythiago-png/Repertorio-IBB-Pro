@@ -195,21 +195,6 @@ function setAdminMode(active, teamName) {
     const addNavItem = document.getElementById('addSongNavItem');
     const editBtn   = document.getElementById('editUrlBtn');
     const editorPanel = document.getElementById('urlEditorPanel');
-    // Sincroniza a nova ordem das músicas na escala via Supabase
-async function syncSetlistOrder(teamName, grid) {
-    const cards = grid.querySelectorAll('.setlist-card[data-setlist-id]');
-    const updates = Array.from(cards).map((card, i) => ({
-        id: parseInt(card.dataset.setlistId),
-        position: i + 1
-    }));
-    try {
-        for (const u of updates) {
-            await _supabase.from('setlists').update({ position: u.position }).eq('id', u.id);
-        }
-    } catch(e) { console.warn('Erro ao reordenar:', e); }
-}
-
-const addToSetlistBtn = document.getElementById('addToSetlistBtn');
     const teamAdminActions = document.getElementById('teamAdminActions');
     const teamAdminStatus = document.getElementById('teamAdminStatus');
 
@@ -821,7 +806,6 @@ async function fetchData() {
         populateCategoryMenu();
         updateFooter();
         initAdminState();
-        loadAllTeamCounts(); // Atualiza contadores nos botões de equipe
     } catch (error) {
         console.error("Erro ao carregar dados do Supabase:", error);
         // Fallback para JSON local se o banco falhar (opcional)
@@ -1468,6 +1452,7 @@ document.getElementById('teamsNav').onclick = (e) => {
     searchResultsGrid.style.display = 'none';
     categoryOverlay.style.display = 'none';
     document.getElementById('teamsContainer').style.display = 'block';
+    loadAllTeamCounts(); // Carrega contadores só quando abre a aba
     
     const activeTeam = sessionStorage.getItem(TEAM_KEY);
     const TS = document.getElementById('teamSelector');
@@ -1639,6 +1624,20 @@ async function loadSetlist(teamName) {
     }
 }
 
+// Sincroniza a nova ordem das músicas na escala via Supabase
+async function syncSetlistOrder(teamName, grid) {
+    const cards = grid.querySelectorAll('.setlist-card[data-setlist-id]');
+    const updates = Array.from(cards).map((card, i) => ({
+        id: parseInt(card.dataset.setlistId),
+        position: i + 1
+    }));
+    try {
+        for (const u of updates) {
+            await _supabase.from('setlists').update({ position: u.position }).eq('id', u.id);
+        }
+    } catch(e) { console.warn('Erro ao reordenar:', e); }
+}
+
 const addToSetlistBtn = document.getElementById('addToSetlistBtn');
 if(addToSetlistBtn) {
     addToSetlistBtn.onclick = () => {
@@ -1684,7 +1683,7 @@ if(saveSetlistBtn) {
              
              alert(`Adicionado com sucesso à escala do ${team}!`);
              document.getElementById('setlistEditorPanel').style.display = 'none';
-             
+             loadAllTeamCounts(); // Atualiza contador
              const teamsCont = document.getElementById('teamsContainer');
              const TS = document.getElementById('teamSelector');
              if(teamsCont && teamsCont.style.display !== 'none' && TS && TS.value === team) {
@@ -1832,29 +1831,19 @@ document.getElementById('modalLiveBtn').onclick = () => {
     }
 };
 
-// Botão "Assistir" no modal abre a performance com o modo selecionado
-const modalInfo = document.querySelector('.modal-info');
-if (modalInfo) {
-    // Cria botão de abrir performance se não existir
-    const perfBtn = document.createElement('button');
-    perfBtn.id = 'modalOpenPerfBtn';
-    perfBtn.className = 'save-url-btn';
-    perfBtn.style.cssText = 'margin-top:10px; width:100%; display:none;';
-    perfBtn.innerHTML = '<i class="fas fa-book-open"></i> Ver Letra / Cifra';
-    perfBtn.onclick = () => {
-        if (!window._modalCurrentSong) return;
-        const activeBtn = document.querySelector('.modal-perf-btn[data-mode].active');
-        const mode = activeBtn ? activeBtn.dataset.mode : 'vocal';
-        modal.style.display = 'none';
-        videoIframe.src = '';
-        openPerformance(window._modalCurrentSong, mode);
-    };
-    // Inserir antes do setlist panel
-    const setPanel = document.getElementById('setlistEditorPanel');
-    if (setPanel) modalInfo.insertBefore(perfBtn, setPanel);
-}
-
 // Inicialização segura
 window.addEventListener('DOMContentLoaded', () => {
     fetchData();
+    // Listener do botão Ver Letra / Cifra
+    const modalOpenPerfBtn = document.getElementById('modalOpenPerfBtn');
+    if (modalOpenPerfBtn) {
+        modalOpenPerfBtn.onclick = () => {
+            if (!window._modalCurrentSong) return;
+            const activeBtn = document.querySelector('.modal-perf-btn[data-mode].active');
+            const mode = activeBtn ? activeBtn.dataset.mode : 'vocal';
+            modal.style.display = 'none';
+            videoIframe.src = '';
+            openPerformance(window._modalCurrentSong, mode);
+        };
+    }
 });
