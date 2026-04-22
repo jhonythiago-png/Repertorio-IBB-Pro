@@ -33,6 +33,7 @@ let currentPerformanceMode = 'vocal'; // 'vocal' ou 'musician'
 let currentTransposeSemitones = 0;
 let autoScrollInterval = null;
 let currentZoomLevel = 1.0;
+let currentFontSize = 15;
 // ---------------------------------
 
 // --- Motores de Captura e Transposição ---
@@ -310,6 +311,9 @@ function openPerformance(song, mode) {
     currentPerformanceMode = mode;
     currentTransposeSemitones = 0;
     currentZoomLevel = 1.0;
+    currentFontSize = 15;
+    const fontLabel = document.getElementById('fontSizeLabel');
+    if (fontLabel) fontLabel.textContent = '15';
 
     const screen = document.getElementById('performanceScreen');
     const content = document.getElementById('performanceContent');
@@ -317,27 +321,14 @@ function openPerformance(song, mode) {
     const artist = document.getElementById('perfArtist');
     const keyIndicator = document.getElementById('perfKeyDisplay');
 
-    // Resetar estado de alinhamento
     screen.classList.remove('vocal-mode');
-    const keyContainer = document.querySelector('.control-group'); // Seletor do grupo do Tom
-    
+    const keyControlGroup = document.getElementById('keyControlGroup');
+
     if (mode === 'vocal') {
         screen.classList.add('vocal-mode');
-        // Esconde o grupo do Tom (label + seletor) no vocal
-        if (keyContainer) {
-            const label = keyContainer.querySelector('.control-label');
-            if (label && label.innerText.toLowerCase().includes('tom')) {
-                keyContainer.style.display = 'none';
-            }
-        }
+        if (keyControlGroup) keyControlGroup.style.display = 'none';
     } else {
-        if (keyContainer) {
-            // Volta a mostrar no músico (garante display flex para manter layout)
-            const label = keyContainer.querySelector('.control-label');
-            if (label && label.innerText.toLowerCase().includes('tom')) {
-                keyContainer.style.display = 'flex';
-            }
-        }
+        if (keyControlGroup) keyControlGroup.style.display = 'flex';
     }
 
     title.textContent = song.title;
@@ -403,17 +394,17 @@ function renderPerformanceContent() {
         // 2. Identificar se a linha é INSTRUMENTAL (Cifras, Tabs, Marcações Técnicas)
         const isCifraOrTab = isChordLineByHeuristic(line) || /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
         
-        // Marcações Técnicas: [Solo], [Intro], Tab, etc.
-        const isTechnicalToRemove = /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) || 
-                                     trimmed.toLowerCase().includes('tab -') ||
-                                     /Parte \d de \d/i.test(trimmed);
+        // Linhas que NUNCA aparecem no vocal (Parte X de Y, Intro, Solo, Tab...)
+        const isAlwaysHidden = /Parte\s+\d+\s+de\s+\d+/i.test(trimmed) ||
+                               /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) ||
+                               trimmed.toLowerCase().includes('tab -');
 
-        // Marcações de Estrutura (mantidas em ambos os modos)
-        const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Parte|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
+        // Marcações de Estrutura visíveis no vocal: Refrão, Verso, Coro, Ponte, Final
+        const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
 
-        // No modo vocal, removemos linhas de cifra e técnicas (exceto marcadores de estrutura)
         if (currentPerformanceMode === 'vocal') {
-            if ((isCifraOrTab || isTechnicalToRemove) && !isStructureMarker) return;
+            if (isAlwaysHidden) return;
+            if (isCifraOrTab && !isStructureMarker) return;
             displayLine = trimmed;
         }
 
@@ -421,13 +412,16 @@ function renderPerformanceContent() {
         lineDiv.className = 'perf-line';
         
         // Realce amarelo para acordes (apenas no modo Músico)
-        if (currentPerformanceMode === 'musician' && (isCifraOrTab || (!isStructureMarker && isTechnicalToRemove))) {
+        if (currentPerformanceMode === 'musician' && (isCifraOrTab || isAlwaysHidden)) {
             lineDiv.classList.add('chord-line');
         }
         
         lineDiv.textContent = displayLine || ' ';
         content.appendChild(lineDiv);
     });
+
+    // Aplica tamanho de fonte após cada render
+    content.style.fontSize = currentFontSize + 'px';
 }
 
 // ── LÓGICA DE TRANSPOSIÇÃO PRO ───────────────────────────────────────
@@ -804,7 +798,7 @@ function openVideo(song) {
     let finalUrl = song.url || '';
     const idMatch = finalUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|shorts\/)([^&?#/ ]+)/);
     if (idMatch) {
-        finalUrl = `https://www.youtube.com/embed/${idMatch[1]}?autoplay=1`;
+        finalUrl = `https://www.youtube.com/embed/${idMatch[1]}`;
     }
 
     const mTitle = document.getElementById('modalTitle');
@@ -1277,97 +1271,22 @@ document.getElementById('teamsNav').onclick = (e) => {
     searchResultsGrid.style.display = 'none';
     categoryOverlay.style.display = 'none';
     document.getElementById('teamsContainer').style.display = 'block';
-
+    
     const activeTeam = sessionStorage.getItem(TEAM_KEY);
     const TS = document.getElementById('teamSelector');
-
-    // Restaura time da sessão
-    if (activeTeam && activeTeam !== 'Master' && !TS.value) {
+    if(activeTeam && activeTeam !== 'Master' && !TS.value) {
         TS.value = activeTeam;
     }
-    // FIX aba anônima: select vazio → seleciona primeiro option disponível
-    if (!TS.value && TS.options.length > 0) {
-        TS.value = TS.options[0].value;
-    }
+    if (!TS.value && TS.options.length > 0) TS.value = TS.options[0].value;
 
     const currentTeam = TS.value;
-    if (currentTeam) {
+    if(currentTeam) {
         applyTeamColorToSelector(currentTeam);
         syncTeamButtons(currentTeam);
         loadSetlist(currentTeam);
         document.getElementById('teamSubTabs').style.display = 'flex';
     }
 };
-
-// ── Team Buttons visuais → <select> oculto ────────────────────────────
-function syncTeamButtons(teamName) {
-    document.querySelectorAll('.team-btn').forEach(btn => {
-        btn.classList.toggle('team-btn-active', btn.dataset.team === teamName);
-    });
-}
-
-document.getElementById('teamBtnGrid').addEventListener('click', (e) => {
-    const btn = e.target.closest('.team-btn');
-    if (!btn) return;
-    const teamName = btn.dataset.team;
-    const TS = document.getElementById('teamSelector');
-    if (!TS.querySelector(`option[value="${teamName}"]`)) {
-        const opt = document.createElement('option');
-        opt.value = teamName;
-        opt.textContent = teamName;
-        TS.appendChild(opt);
-    }
-    TS.value = teamName;
-    syncTeamButtons(teamName);
-    applyTeamColorToSelector(teamName);
-    loadSetlist(teamName);
-    document.getElementById('teamSubTabs').style.display = 'flex';
-});
-
-// ── Wake Lock API — botões AO VIVO ────────────────────────────────────
-let _wakeLock = null;
-
-async function requestWakeLock() {
-    if (!('wakeLock' in navigator)) {
-        alert('Wake Lock não suportado neste navegador/dispositivo.');
-        return;
-    }
-    try {
-        _wakeLock = await navigator.wakeLock.request('screen');
-        _wakeLock.addEventListener('release', () => { _wakeLock = null; updateWakeLockUI(); });
-        updateWakeLockUI();
-    } catch (err) {
-        console.warn('[WakeLock] não foi possível ativar:', err);
-    }
-}
-
-async function releaseWakeLock() {
-    if (_wakeLock) { await _wakeLock.release(); _wakeLock = null; }
-    updateWakeLockUI();
-}
-
-function updateWakeLockUI() {
-    const active = !!_wakeLock;
-    [document.getElementById('teamWakeLockBtn'), document.getElementById('modalLiveBtn')]
-        .forEach(btn => {
-            if (!btn) return;
-            btn.classList.toggle('wake-lock-active', active);
-            btn.title = active
-                ? 'Tela travada acordada — clique para desativar'
-                : 'Manter tela acesa durante a escala';
-        });
-}
-
-document.getElementById('teamWakeLockBtn').addEventListener('click', () => {
-    _wakeLock ? releaseWakeLock() : requestWakeLock();
-});
-
-// Reativa wake lock se o sistema liberou (mudança de aba, bloqueio de tela)
-document.addEventListener('visibilitychange', async () => {
-    if (_wakeLock !== null && document.visibilityState === 'visible') {
-        await requestWakeLock();
-    }
-});
 
 // Eventos das Sub-Abas de Equipe
 document.querySelectorAll('.sub-tab-btn').forEach(btn => {
@@ -1379,23 +1298,13 @@ document.querySelectorAll('.sub-tab-btn').forEach(btn => {
         // Se a tela de performance estiver aberta, atualize a view em tempo real
         const screen = document.getElementById('performanceScreen');
         if (screen && screen.style.display === 'flex') {
-            const keyContainer = document.querySelector('.control-group');
+            const keyControlGroup = document.getElementById('keyControlGroup');
             if (currentPerformanceMode === 'vocal') {
                 screen.classList.add('vocal-mode');
-                if (keyContainer) {
-                    const label = keyContainer.querySelector('.control-label');
-                    if (label && label.innerText.toLowerCase().includes('tom')) {
-                        keyContainer.style.display = 'none';
-                    }
-                }
+                if (keyControlGroup) keyControlGroup.style.display = 'none';
             } else {
                 screen.classList.remove('vocal-mode');
-                if (keyContainer) {
-                    const label = keyContainer.querySelector('.control-label');
-                    if (label && label.innerText.toLowerCase().includes('tom')) {
-                        keyContainer.style.display = 'flex';
-                    }
-                }
+                if (keyControlGroup) keyControlGroup.style.display = 'flex';
             }
             renderPerformanceContent();
         }
@@ -1420,15 +1329,16 @@ async function loadSetlist(teamName) {
 
     const loggedTeam = sessionStorage.getItem(TEAM_KEY);
     const auth = sessionStorage.getItem(AUTH_KEY) === 'true';
+    const isAdmin = auth && (loggedTeam === 'Master' || loggedTeam === teamName);
     const actions = document.getElementById('teamAdminActions');
     const status = document.getElementById('teamAdminStatus');
-    
-    if(auth && (loggedTeam === 'Master' || loggedTeam === teamName)) {
-         if(actions) actions.style.display = 'flex';
-         if(status) status.style.display = 'block';
+
+    if (isAdmin) {
+        if(actions) actions.style.display = 'flex';
+        if(status) status.style.display = 'block';
     } else {
-         if(actions) actions.style.display = 'none';
-         if(status) status.style.display = 'none';
+        if(actions) actions.style.display = 'none';
+        if(status) status.style.display = 'none';
     }
 
     try {
@@ -1436,6 +1346,7 @@ async function loadSetlist(teamName) {
             .from('setlists')
             .select('*')
             .eq('team', teamName)
+            .order('position', { ascending: true, nullsFirst: false })
             .order('id', { ascending: true });
             
         if(error) throw error;
@@ -1446,40 +1357,55 @@ async function loadSetlist(teamName) {
             return;
         }
 
-        data.forEach(setItem => {
+        data.forEach((setItem, idx) => {
             let originalSong = null;
             for(const cat of repertoireData) {
                 const found = cat.items.find(s => s.title === setItem.song_title);
-                if(found) {
-                    originalSong = found;
-                    break;
-                }
+                if(found) { originalSong = found; break; }
             }
 
-            if(originalSong) {
-                const songClone = { ...originalSong, obs: setItem.obs };
-                const card = createSongCard(songClone);
-                card.classList.add('setlist-card');
-                
-                if (setItem.obs) {
-                    const infoDiv = card.querySelector('.card-info');
-                    infoDiv.innerHTML += `<p class="setlist-obs">[ ${setItem.obs} ]</p>`;
-                }
-                
-                // Mudar comportamento do clique para abrir a PERFORMANCE na escala
-                card.onclick = (e) => {
-                    e.stopPropagation();
-                    openPerformance(originalSong, currentPerformanceMode);
-                };
-                
-                grid.appendChild(card);
-            } else {
-                const fakeSong = { title: setItem.song_title, artist: 'Excluída da base', obs: setItem.obs, vid_id: '' };
-                const card = createSongCard(fakeSong);
-                card.classList.add('setlist-card');
-                grid.appendChild(card);
+            const songForCard = originalSong
+                ? { ...originalSong, obs: setItem.obs }
+                : { title: setItem.song_title, artist: 'Excluída da base', obs: setItem.obs, url: '' };
+
+            const card = createSongCard(songForCard);
+            card.classList.add('setlist-card');
+            card.dataset.setlistId = setItem.id;
+
+            // Número de ordem
+            const posBadge = document.createElement('span');
+            posBadge.className = 'setlist-pos-badge';
+            posBadge.textContent = idx + 1;
+            card.prepend(posBadge);
+
+            if (setItem.obs) {
+                const infoDiv = card.querySelector('.card-info');
+                if (infoDiv) infoDiv.innerHTML += `<p class="setlist-obs">[ ${setItem.obs} ]</p>`;
             }
+
+            // Clique abre o modal igual à página inicial
+            card.onclick = (e) => {
+                if (e.target.closest('.drag-handle')) return;
+                if (originalSong) openVideo(originalSong);
+            };
+
+            // ADM: drag-to-reorder
+            if (isAdmin) {
+                const handle = document.createElement('span');
+                handle.className = 'drag-handle';
+                handle.innerHTML = '<i class="fas fa-grip-lines"></i>';
+                card.prepend(handle);
+                card.setAttribute('draggable', 'true');
+                card.addEventListener('dragstart', _onDragStart);
+                card.addEventListener('dragover',  _onDragOver);
+                card.addEventListener('drop',       _onDrop);
+                card.addEventListener('dragend',    _onDragEnd);
+            }
+
+            grid.appendChild(card);
         });
+
+        updateTeamBadges();
     } catch (err) {
         console.error(err);
         grid.innerHTML = '<p style="grid-column: 1/-1; color:red; text-align:center;">Erro ao carregar escala.</p>';
@@ -1663,61 +1589,155 @@ window.openHeroVideo = function() {
 };
 
 // Inicialização segura
+// ── syncTeamButtons ──────────────────────────────────────────────────
+function syncTeamButtons(teamName) {
+    document.querySelectorAll('.team-btn').forEach(btn => {
+        btn.classList.toggle('team-btn-active', btn.dataset.team === teamName);
+    });
+}
+
+// ── Team Buttons visuais ──────────────────────────────────────────────
+document.getElementById('teamBtnGrid').addEventListener('click', (e) => {
+    const btn = e.target.closest('.team-btn');
+    if (!btn) return;
+    const teamName = btn.dataset.team;
+    const TS = document.getElementById('teamSelector');
+    if (!TS.querySelector(`option[value="${teamName}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = teamName; opt.textContent = teamName;
+        TS.appendChild(opt);
+    }
+    TS.value = teamName;
+    syncTeamButtons(teamName);
+    applyTeamColorToSelector(teamName);
+    loadSetlist(teamName);
+    document.getElementById('teamSubTabs').style.display = 'flex';
+});
+
+// ── Wake Lock ─────────────────────────────────────────────────────────
+let _wakeLock = null;
+async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+        _wakeLock = await navigator.wakeLock.request('screen');
+        _wakeLock.addEventListener('release', () => { _wakeLock = null; _updateWakeLockUI(); });
+        _updateWakeLockUI();
+    } catch(e) {}
+}
+async function releaseWakeLock() {
+    if (_wakeLock) { await _wakeLock.release(); _wakeLock = null; }
+    _updateWakeLockUI();
+}
+function _updateWakeLockUI() {
+    const active = !!_wakeLock;
+    ['teamWakeLockBtn','modalLiveBtn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('wake-lock-active', active);
+    });
+}
+document.getElementById('teamWakeLockBtn').addEventListener('click', () => {
+    _wakeLock ? releaseWakeLock() : requestWakeLock();
+});
+document.addEventListener('visibilitychange', () => {
+    if (_wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
+});
+
+// ── Drag-to-Reorder ───────────────────────────────────────────────────
+let _dragSrc = null;
+function _onDragStart(e) { _dragSrc = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function _onDragOver(e) { e.preventDefault(); document.querySelectorAll('.setlist-card').forEach(c => c.classList.remove('drag-over')); this.classList.add('drag-over'); }
+function _onDrop(e) {
+    e.preventDefault();
+    if (_dragSrc && _dragSrc !== this) {
+        const cards = [...document.querySelectorAll('#teamSetlistGrid .setlist-card')];
+        const si = cards.indexOf(_dragSrc), di = cards.indexOf(this);
+        const grid = document.getElementById('teamSetlistGrid');
+        if (si < di) grid.insertBefore(_dragSrc, this.nextSibling);
+        else grid.insertBefore(_dragSrc, this);
+        _saveSetlistOrder();
+    }
+}
+function _onDragEnd() { document.querySelectorAll('.setlist-card').forEach(c => c.classList.remove('dragging','drag-over')); _dragSrc = null; }
+async function _saveSetlistOrder() {
+    const cards = [...document.querySelectorAll('#teamSetlistGrid .setlist-card')];
+    cards.forEach((c, i) => { const b = c.querySelector('.setlist-pos-badge'); if(b) b.textContent = i+1; });
+    for (const [i, c] of cards.entries()) {
+        await _supabase.from('setlists').update({ position: i + 1 }).eq('id', parseInt(c.dataset.setlistId));
+    }
+}
+
+// ── Badge de contagem nos botões de equipe ────────────────────────────
+async function updateTeamBadges() {
+    const teams = ['Start','Amarelo','Laranja','Azul','Verde','Branco'];
+    for (const team of teams) {
+        try {
+            const { data } = await _supabase.from('setlists').select('id').eq('team', team);
+            const count = (data || []).length;
+            const btn = document.querySelector(`.team-btn[data-team="${team}"]`);
+            if (!btn) continue;
+            let badge = btn.querySelector('.team-count-badge');
+            if (count > 0) {
+                if (!badge) { badge = document.createElement('span'); badge.className = 'team-count-badge'; btn.appendChild(badge); }
+                badge.textContent = count;
+            } else if (badge) { badge.remove(); }
+        } catch(_) {}
+    }
+}
+
+// ── Controles de Fonte ────────────────────────────────────────────────
+function applyFontSize(size) {
+    currentFontSize = Math.max(10, Math.min(28, size));
+    const c = document.getElementById('performanceContent');
+    if (c) c.style.fontSize = currentFontSize + 'px';
+    const lbl = document.getElementById('fontSizeLabel');
+    if (lbl) lbl.textContent = currentFontSize;
+}
+document.getElementById('fontIncrease').addEventListener('click', () => applyFontSize(currentFontSize + 1));
+document.getElementById('fontDecrease').addEventListener('click', () => applyFontSize(currentFontSize - 1));
+
 window.addEventListener('DOMContentLoaded', () => {
     _lastFetchTime = Date.now();
     fetchData();
+    setTimeout(updateTeamBadges, 1500);
 
-    // ── Botão "Ver Letra / Cifra" — abre tela de performance ──────────
-    // Comportamento: fecha modal, exibe performanceScreen com o player
-    // oculto por padrão + botão para mostrar/ocultar player no topo.
+    // Botão AO VIVO no modal
+    const modalLiveBtn = document.getElementById('modalLiveBtn');
+    if (modalLiveBtn) modalLiveBtn.addEventListener('click', () => { _wakeLock ? releaseWakeLock() : requestWakeLock(); });
+
+    // Botão Ver Letra / Cifra no modal
     const modalOpenPerfBtn = document.getElementById('modalOpenPerfBtn');
     if (modalOpenPerfBtn) {
         modalOpenPerfBtn.onclick = () => {
             if (!window._modalCurrentSong) return;
             const activeBtn = document.querySelector('.modal-perf-btn[data-mode].active');
             const mode = activeBtn ? activeBtn.dataset.mode : 'vocal';
-
-            // Transfere o src do iframe do modal para o player da tela de performance
             const currentSrc = videoIframe.src;
             modal.style.display = 'none';
             videoIframe.src = '';
-
             openPerformance(window._modalCurrentSong, mode);
-
-            // Injeta o player: copia src para o perfPlayerIframe e mostra wrapper + toggle
+            // Transfere player para tela de performance
             if (currentSrc && currentSrc !== 'about:blank' && currentSrc !== '') {
                 const perfIframe = document.getElementById('perfPlayerIframe');
                 const perfWrapper = document.getElementById('perfPlayerWrapper');
                 const perfToggleBtn = document.getElementById('perfPlayerToggle');
                 if (perfIframe) perfIframe.src = currentSrc;
-                // Player fica oculto por padrão — usuário abre se quiser
                 if (perfWrapper) perfWrapper.style.display = 'none';
                 if (perfToggleBtn) {
                     perfToggleBtn.style.display = 'flex';
                     perfToggleBtn.title = 'Mostrar player';
                     perfToggleBtn.innerHTML = '<i class="fas fa-music"></i>';
                     perfToggleBtn.onclick = () => {
-                        const visible = perfWrapper.style.display !== 'none';
-                        perfWrapper.style.display = visible ? 'none' : 'block';
-                        perfToggleBtn.title = visible ? 'Mostrar player' : 'Ocultar player';
-                        perfToggleBtn.innerHTML = visible
-                            ? '<i class="fas fa-music"></i>'
-                            : '<i class="fas fa-eye-slash"></i>';
+                        const vis = perfWrapper.style.display !== 'none';
+                        perfWrapper.style.display = vis ? 'none' : 'block';
+                        perfToggleBtn.title = vis ? 'Mostrar player' : 'Ocultar player';
+                        perfToggleBtn.innerHTML = vis ? '<i class="fas fa-music"></i>' : '<i class="fas fa-eye-slash"></i>';
                     };
                 }
             }
         };
     }
 
-    // ── Botão AO VIVO no modal ─────────────────────────────────────────
-    const modalLiveBtn = document.getElementById('modalLiveBtn');
-    if (modalLiveBtn) {
-        modalLiveBtn.addEventListener('click', () => {
-            _wakeLock ? releaseWakeLock() : requestWakeLock();
-        });
-    }
-
-    // ── Abas Vocal/Músico no modal ─────────────────────────────────────
+    // Abas Vocal/Músico no modal
     document.querySelectorAll('.modal-perf-btn[data-mode]').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('.modal-perf-btn[data-mode]').forEach(b => b.classList.remove('active'));
