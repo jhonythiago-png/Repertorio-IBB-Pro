@@ -1703,7 +1703,41 @@ footer {
     margin-top: 10px;
 }
 
-.transpose-btns button, .perf-controls button {
+/* ── Capotraste ── */
+.capo-popup {
+    top: 70px;
+}
+.capo-grid-items {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+.capo-btn-item {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-align: center;
+    transition: background 0.2s, border-color 0.2s;
+}
+.capo-btn-item:hover {
+    background: #444;
+}
+.capo-btn-item.active {
+    background: rgba(229,9,20,0.2);
+    border-color: var(--netflix-red);
+    color: var(--netflix-red);
+}
+.capo-btn {
+    font-size: 0.78rem !important;
+    min-width: 60px;
+}
+
+anspose-btns button, .perf-controls button {
     background: transparent;
     border: none;
     color: #fff;
