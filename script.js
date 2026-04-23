@@ -1391,10 +1391,11 @@ async function loadSetlist(teamName) {
                 if (infoDiv) infoDiv.innerHTML += `<p class="setlist-obs">[ ${setItem.obs} ]</p>`;
             }
 
-            // Clique abre o modal igual à página inicial
+            // Clique abre direto a tela de performance no modo já selecionado (Vocal/Músico)
+            // sem passar pelo modal — respeita o que o usuário já escolheu nas sub-abas
             card.onclick = (e) => {
                 if (e.target.closest('.drag-handle')) return;
-                if (originalSong) openVideo(originalSong);
+                if (originalSong) openPerformance(originalSong, currentPerformanceMode);
             };
 
             // ADM: drag-to-reorder
