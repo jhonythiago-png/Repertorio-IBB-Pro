@@ -353,7 +353,33 @@ function openPerformance(song, mode) {
     keyIndicator.textContent = originalKey;
     keyIndicator.dataset.original = originalKey;
 
-    renderPerformanceContent();
+    // ── Extrair Capotraste e Tom completo da cifra ────────────────────
+    const capoMatch = textContent.match(/Capotraste\s+na\s+(\d+)[aª°]?\s*casa/i) ||
+                      textContent.match(/Capo\s*[na]*\s*(\d+)/i);
+    const capoGroup = document.getElementById('capoControlGroup');
+    const capoDisplay = document.getElementById('perfCapoDisplay');
+    let _currentCapo = 0;
+
+    if (capoMatch && capoGroup && capoDisplay) {
+        _currentCapo = parseInt(capoMatch[1]);
+        capoDisplay.textContent = `${_currentCapo}ª casa`;
+        capoDisplay.dataset.capo = _currentCapo;
+        capoGroup.style.display = 'flex';
+        // Marcar botão ativo no popup
+        document.querySelectorAll('.capo-btn-item').forEach(b => {
+            b.classList.toggle('active', parseInt(b.dataset.capo) === _currentCapo);
+        });
+    } else if (capoGroup) {
+        capoGroup.style.display = 'none';
+        if (capoDisplay) { capoDisplay.dataset.capo = 0; }
+    }
+
+    // Tom completo ex: "Bb (forma dos acordes no tom de G)"
+    const tomFullMatch = textContent.match(/Tom:\s*([A-G][b#]?(?:\s*\([^)]+\))?)/i);
+    if (tomFullMatch) {
+        keyIndicator.title = 'Tom: ' + tomFullMatch[1].trim();
+    }
+    // ─────────────────────────────────────────────────────────────────
 
     screen.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -366,62 +392,113 @@ function renderPerformanceContent() {
     const content = document.getElementById('performanceContent');
     
     // ── CORREÇÃO CRÍTICA: Limpar o conteúdo ANTES de redesenhar ──
-    // Sem isso, cada transposição adicionava linhas duplicadas e não surgia efeito
     content.innerHTML = '';
 
     let text = currentPerformanceSong.cifra_text || 'Sem letra ou cifra cadastrada.';
     
-    // Aplicar Transposição (em ambos os modos — o botão só aparece para músicos)
+    // Aplicar Transposição
     if (currentTransposeSemitones !== 0) {
         text = processTransposition(text, currentTransposeSemitones);
     }
 
     const lines = text.split('\n');
+    const isVocal = currentPerformanceMode === 'vocal';
 
-    lines.forEach(line => {
-        let displayLine = line;
-        const trimmed = line.trim();
-        
-        // 1. Linhas vazias — preservar espaçamento original do Cifra Club
-        if (trimmed === "") {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'perf-line empty-line';
-            emptyDiv.innerHTML = '&nbsp;';
-            content.appendChild(emptyDiv);
-            return;
-        }
+    // No modo vocal, precisamos pré-processar para evitar linhas vazias acumuladas
+    // (quando cifras são removidas, ficam lacunas duplas/triplas)
+    if (isVocal) {
+        // Filtra primeiro, depois renderiza — evita blocos vazios
+        const filteredLines = [];
+        let lastWasEmpty = false;
 
-        // 2. Identificar se a linha é INSTRUMENTAL (Cifras, Tabs, Marcações Técnicas)
-        const isCifraOrTab = isChordLineByHeuristic(line) || /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
-        
-        // Linhas que NUNCA aparecem no vocal (Parte X de Y, Intro, Solo, Tab...)
-        const isAlwaysHidden = /Parte\s+\d+\s+de\s+\d+/i.test(trimmed) ||
-                               /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) ||
-                               trimmed.toLowerCase().includes('tab -');
+        lines.forEach(line => {
+            const trimmed = line.trim();
 
-        // Marcações de Estrutura visíveis no vocal: Refrão, Verso, Coro, Ponte, Final
-        const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
+            const isCifraOrTab = isChordLineByHeuristic(line) ||
+                /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
 
-        if (currentPerformanceMode === 'vocal') {
+            const isAlwaysHidden = /Parte\s+\d+\s+de\s+\d+/i.test(trimmed) ||
+                /^\s*Tom\s*:/i.test(trimmed) ||
+                /^\s*Capotraste/i.test(trimmed) ||
+                /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) ||
+                trimmed.toLowerCase().includes('tab -');
+
+            const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
+
+            // Linhas a ignorar no vocal
             if (isAlwaysHidden) return;
             if (isCifraOrTab && !isStructureMarker) return;
-            displayLine = trimmed;
-        }
 
-        const lineDiv = document.createElement('div');
-        lineDiv.className = 'perf-line';
-        
-        // Realce amarelo para acordes (apenas no modo Músico)
-        if (currentPerformanceMode === 'musician' && (isCifraOrTab || isAlwaysHidden)) {
-            lineDiv.classList.add('chord-line');
-        }
-        
-        lineDiv.textContent = displayLine || ' ';
-        content.appendChild(lineDiv);
-    });
+            // Linha vazia: só adiciona se a linha anterior não era vazia
+            if (trimmed === '') {
+                if (!lastWasEmpty) {
+                    filteredLines.push('');
+                    lastWasEmpty = true;
+                }
+                return;
+            }
+
+            lastWasEmpty = false;
+            filteredLines.push(trimmed);
+        });
+
+        // Remove linha vazia no início ou no fim
+        while (filteredLines.length && filteredLines[0] === '') filteredLines.shift();
+        while (filteredLines.length && filteredLines[filteredLines.length - 1] === '') filteredLines.pop();
+
+        filteredLines.forEach(line => {
+            const lineDiv = document.createElement('div');
+            if (line === '') {
+                lineDiv.className = 'perf-line empty-line';
+                lineDiv.innerHTML = '&nbsp;';
+            } else {
+                lineDiv.className = 'perf-line';
+                const isMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(line);
+                if (isMarker) lineDiv.classList.add('structure-marker');
+                lineDiv.textContent = line;
+            }
+            content.appendChild(lineDiv);
+        });
+
+    } else {
+        // Modo músico — renderização completa original
+        lines.forEach(line => {
+            let displayLine = line;
+            const trimmed = line.trim();
+
+            if (trimmed === '') {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'perf-line empty-line';
+                emptyDiv.innerHTML = '&nbsp;';
+                content.appendChild(emptyDiv);
+                return;
+            }
+
+            // Ocultar metadados da cifra no modo músico também
+            if (/^\s*Tom\s*:/i.test(trimmed) || /^\s*Capotraste/i.test(trimmed)) return;
+
+            const isCifraOrTab = isChordLineByHeuristic(line) ||
+                /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
+
+            const isAlwaysHidden = /Parte\s+\d+\s+de\s+\d+/i.test(trimmed) ||
+                /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) ||
+                trimmed.toLowerCase().includes('tab -');
+
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'perf-line';
+
+            if (isCifraOrTab || isAlwaysHidden) {
+                lineDiv.classList.add('chord-line');
+            }
+
+            lineDiv.textContent = displayLine || ' ';
+            content.appendChild(lineDiv);
+        });
+    }
 
     // Aplica tamanho de fonte após cada render
-    content.style.fontSize = currentFontSize + 'px';
+    const c = document.getElementById('performanceContent');
+    if (c) c.style.setProperty('--perf-font-size', currentFontSize + 'px');
 }
 
 // ── LÓGICA DE TRANSPOSIÇÃO PRO ───────────────────────────────────────
@@ -1710,6 +1787,37 @@ window.addEventListener('DOMContentLoaded', () => {
     _lastFetchTime = Date.now();
     fetchData();
     setTimeout(updateTeamBadges, 1500);
+
+    // ── Capotraste popup ──────────────────────────────────────────────
+    const capoDisplay = document.getElementById('perfCapoDisplay');
+    const capoGrid = document.getElementById('capoSelectorGrid');
+
+    if (capoDisplay && capoGrid) {
+        capoDisplay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            capoGrid.style.display = capoGrid.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('keySelectorGrid').style.display = 'none';
+        });
+
+        capoGrid.querySelectorAll('.capo-btn-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const casa = parseInt(btn.dataset.capo);
+                capoDisplay.textContent = casa === 0 ? 'Sem capo' : `${casa}ª casa`;
+                capoDisplay.dataset.capo = casa;
+                capoGrid.querySelectorAll('.capo-btn-item').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                capoGrid.style.display = 'none';
+                // Capotraste é info visual para o músico — não transpõe automaticamente
+            });
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (capoGrid && !capoGrid.contains(e.target) && e.target !== capoDisplay) {
+            capoGrid.style.display = 'none';
+        }
+    });
+    // ─────────────────────────────────────────────────────────────────
 
     // Botão AO VIVO no modal
     const modalLiveBtn = document.getElementById('modalLiveBtn');
