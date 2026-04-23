@@ -1,2096 +1,1868 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --netflix-red: #E50914;
-    --netflix-black: #141414;
-    --text-color: #FFFFFF;
-    --gray: #808080;
-}
-
-body {
-    background-color: var(--netflix-black);
-    color: var(--text-color);
-    font-family: 'Roboto', sans-serif;
-    overflow-x: hidden;
-    width: 100vw;
-}
-
-/* Header */
-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px 4%;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
-    transition: background 0.3s ease;
-}
-
-header.scrolled {
-    background-color: #000;
-}
-
-.logo {
-    color: var(--netflix-red);
-    font-size: 1.5rem;
-    font-weight: bold;
-    letter-spacing: 1px;
-    flex-shrink: 0;
-}
-
-.menu-toggle {
-    display: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #fff;
-    order: 2;
-}
-
-nav {
-    flex-grow: 1;
-}
-
-nav ul {
-    display: flex;
-    list-style: none;
-    margin-left: 20px;
-    align-items: center;
-}
-
-nav ul li {
-    margin-right: 20px;
-}
-
-nav ul li a {
-    color: #e5e5e5;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.3s;
-}
-
-nav ul li a:hover, nav ul li a.active {
-    color: #fff;
-    font-weight: bold;
-}
-
-.add-btn-main {
-    background: var(--netflix-red);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background 0.3s;
-    font-size: 0.85rem;
-}
-
-.add-btn-main:hover {
-    background: #b20710;
-}
-
-.adm-btn {
-    background: transparent;
-    color: #aaa;
-    border: 1px solid #555;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s;
-    font-size: 0.85rem;
-}
-
-.adm-btn:hover {
-    border-color: #fff;
-    color: #fff;
-}
-
-.adm-btn.active {
-    background: rgba(229,9,20,0.15);
-    border-color: var(--netflix-red);
-    color: var(--netflix-red);
-}
-
-.search-container {
-    display: flex;
-    align-items: center;
-    background: rgba(0,0,0,0.75);
-    border: 1px solid rgba(255,255,255,0.6);
-    padding: 6px 12px;
-    border-radius: 4px;
-    transition: width 0.3s;
-}
-
-.search-container i {
-    margin-left: 10px;
-    color: #fff;
-    font-size: 0.9rem;
-}
-
-.search-container input {
-    background: transparent;
-    border: none;
-    color: #fff;
-    outline: none;
-    width: 180px;
-    font-size: 0.9rem;
-}
-
-/* Hero Section */
-.hero {
-    height: 35vh;
-    width: 100%;
-    background-image: url('hero_banner.png');
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    align-items: center;
-    position: relative;
-    padding-left: 4%;
-    margin-top: 0;
-}
-
-.hero-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to top, rgba(0,0,0,.8) 0, rgba(0,0,0,0) 100%);
-    z-index: 1;
-}
-
-.hero-content {
-    display: none !important;
-}
-
-/* Category Overlay */
-.category-overlay {
-    display: none;
-    position: fixed;
-    top: 60px;
-    left: 0;
-    width: 100%;
-    height: calc(100vh - 60px);
-    background: rgba(20, 20, 20, 0.98);
-    z-index: 900;
-    padding: 40px 4%;
-    overflow-y: auto;
-}
-
-.category-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.category-item {
-    background: rgba(255,255,255,0.05);
-    padding: 15px 10px;
-    border-radius: 4px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    font-weight: bold;
-    border: 1px solid rgba(255,255,255,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 80px;
-    font-size: 0.9rem;
-    overflow: hidden;
-    word-wrap: break-word;
-}
-
-.category-item:hover {
-    background: var(--netflix-red);
-    transform: translateY(-5px);
-}
-
-/* Repertoire Rows */
-#categoriesContainer {
-    padding: 20px 4%;
-    margin-top: -60px;
-    position: relative;
-    z-index: 10;
-}
-
-.category-row {
-    margin-bottom: 40px;
-}
-
-.category-row h2 {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
-}
-
-.row-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.row-container {
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 20px 0;
-    scrollbar-width: none;
-    scroll-behavior: smooth;
-    width: 100%;
-}
-
-.nav-btn {
-    position: absolute;
-    background: rgba(0,0,0,0.5);
-    color: #fff;
-    border: none;
-    height: 80%;
-    width: 45px;
-    z-index: 50;
-    cursor: pointer;
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s, background 0.3s;
-    border-radius: 4px;
-}
-
-.row-wrapper:hover .nav-btn {
-    opacity: 1;
-}
-
-.nav-btn:hover {
-    background: rgba(0,0,0,0.8);
-}
-
-.prev-btn { left: 0; }
-.next-btn { right: 0; }
-
-.row-container::-webkit-scrollbar {
-    display: none;
-}
-
-/* Song Cards */
-.song-card {
-    min-width: 250px;
-    max-width: 250px;
-    height: 140px;
-    margin-right: 10px;
-    position: relative;
-    overflow: hidden;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
-
-.song-card:hover {
-    transform: scale(1.1);
-    z-index: 100;
-}
-
-.song-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.card-info {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 10px;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.song-card:hover .card-info {
-    opacity: 1;
-}
-
-.card-info h4 {
-    font-size: 0.9rem;
-    margin-bottom: 2px;
-}
-
-.card-info p {
-    font-size: 0.7rem;
-    color: #ccc;
-}
-
-/* Search Results Grid */
-.search-results-grid {
-    display: none;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 30px 15px;
-    padding: 100px 4% 50px;
-}
-
-.search-results-grid .song-card {
-    min-width: 0;
-    max-width: none;
-}
-
-/* Add Song Modal & Forms */
-.add-song-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.add-song-form input {
-    background: #333;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 12px;
-    border-radius: 4px;
-    outline: none;
-}
-
-.category-selection {
-    text-align: left;
-    margin: 10px 0;
-}
-
-.category-selection label {
-    display: block;
-    margin-bottom: 10px;
-    color: #aaa;
-    font-weight: bold;
-}
-
-.checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
-    background: #222;
-    padding: 15px;
-    border-radius: 4px;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    cursor: pointer;
-}
-
-.checkbox-item input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-.save-btn-large {
-    background: var(--netflix-red);
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 4px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.save-btn-large:hover {
-    background: #b20710;
-}
-
-.close-add-modal {
-    position: absolute;
-    right: 20px;
-    top: 20px;
-    font-size: 2.5rem;
-    cursor: pointer;
-    color: #fff;
-    z-index: 100;
-}
-
-/* Modal General */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.9);
-}
-
-.modal-content {
-    background-color: #181818;
-    margin: 3% auto;
-    width: 70%;
-    max-width: 900px;
-    max-height: 90vh;      /* Never taller than the screen */
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.video-wrapper {
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-}
-
-.video-wrapper iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.modal-info {
-    padding: 20px;
-    overflow-y: auto;      /* Scroll only the info/admin panel */
-    flex: 1;               /* Takes remaining space after the video */
-    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
-}
-
-.modal-actions {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-}
-
-#editUrlBtn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--netflix-red);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: bold;
-    transition: all 0.3s;
-    margin-top: 10px;
-}
-
-#editUrlBtn:hover {
-    background: var(--netflix-red);
-    transform: scale(1.05);
-}
-
-#addToSetlistBtn {
-    background: #2ecc71;
-    border: 1px solid #27ae60;
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: bold;
-    transition: all 0.3s;
-    margin-top: 10px;
-}
-
-#addToSetlistBtn:hover {
-    background: #27ae60;
-    transform: scale(1.05);
-}
-
-/* Painel Inline de Edição de URL */
-.url-editor-panel {
-    margin-top: 15px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 6px;
-    padding: 16px;
-    animation: fadeInDown 0.2s ease;
-}
-
-@keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.search-container {
-    position: relative;
-    max-width: 400px;
-    width: 100%;
-    margin: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#forceRefreshBtn {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 1.1rem;
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease, color 0.3s ease;
-    border-radius: 50%;
-}
-
-#forceRefreshBtn:hover {
-    color: #e50914;
-    transform: scale(1.1);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-#forceRefreshBtn.spinning i {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-#searchInput {
-    width: 100%;
-    padding: 10px 15px 10px 40px;
-    background: rgba(0, 0, 0, 0.75);
-    border: 1px solid #333;
-    color: white;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.3s;
-}
-
-.url-editor-panel p {
-    font-size: 0.85rem;
-    color: #aaa;
-    margin-bottom: 10px;
-}
-
-.url-editor-panel input {
-    width: 100%;
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.url-editor-panel input:focus {
-    border-color: var(--netflix-red);
-}
-
-.url-editor-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-}
-
-.save-url-btn {
-    background: var(--netflix-red);
-    color: #fff;
-    border: none;
-    padding: 9px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s;
-}
-
-.save-url-btn:hover { background: #b20710; }
-
-.cancel-url-btn {
-    background: transparent;
-    border: 1px solid #555;
-    color: #aaa;
-    padding: 9px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
-
-.cancel-url-btn:hover {
-    border-color: #fff;
-    color: #fff;
-}
-
-/* Admin Panel Sections */
-.editor-section {
-    margin-bottom: 4px;
-}
-
-.editor-section-title {
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: #aaa;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.editor-section-title.danger {
-    color: #ff6b6b;
-}
-
-.editor-divider {
-    border: none;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    margin: 16px 0;
-}
-
-/* Category Checkboxes inside Editor */
-.edit-checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 8px;
-    background: #1a1a1a;
-    padding: 12px;
-    border-radius: 4px;
-    max-height: 180px;
-    overflow-y: auto;
-}
-
-.edit-checkbox-grid label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    color: #ccc;
-}
-
-.edit-checkbox-grid input[type=checkbox] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--netflix-red);
-    cursor: pointer;
-}
-
-/* Delete Zone */
-.delete-section { margin-top: 4px; }
-
-.delete-song-btn {
-    background: transparent;
-    border: 1px solid #ff6b6b;
-    color: #ff6b6b;
-    padding: 9px 18px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-    font-size: 0.9rem;
-}
-
-.delete-song-btn:hover {
-    background: rgba(255,107,107,0.15);
-}
-
-.delete-confirm-box {
-    background: rgba(255,107,107,0.08);
-    border: 1px solid rgba(255,107,107,0.3);
-    border-radius: 4px;
-    padding: 12px;
-    margin-bottom: 10px;
-}
-
-.delete-confirm-box p {
-    color: #ff6b6b;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-}
-
-.delete-final-btn {
-    background: #c0392b;
-    color: #fff;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s;
-}
-
-.delete-final-btn:hover { background: #a93226; }
-
-.close-modal {
-    position: absolute;
-    right: 20px;
-    top: 20px;
-    color: #fff;
-    font-size: 2rem;
-    cursor: pointer;
-    z-index: 100;
-}
-
-/* Password Gate Modal */
-.password-gate-content {
-    max-width: 420px !important;
-    width: 90% !important;
-    margin: 15% auto !important;
-    overflow: visible !important;
-    text-align: center;
-}
-
-.close-password-modal {
-    position: absolute;
-    right: 16px;
-    top: 12px;
-    font-size: 1.8rem;
-    cursor: pointer;
-    color: #888;
-    z-index: 100;
-}
-
-.close-password-modal:hover { color: #fff; }
-
-.password-gate-body {
-    padding: 40px 30px 30px;
-}
-
-.password-gate-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: rgba(229,9,20,0.15);
-    border: 2px solid var(--netflix-red);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 1.6rem;
-    color: var(--netflix-red);
-}
-
-.password-gate-body h2 {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
-}
-
-.password-gate-body > p {
-    color: #aaa;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
-.password-input-wrap {
-    display: flex;
-    gap: 8px;
-}
-
-.password-input-wrap input {
-    flex: 1;
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 11px 14px;
-    border-radius: 4px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.password-input-wrap input:focus {
-    border-color: var(--netflix-red);
-}
-
-.password-input-wrap button {
-    background: var(--netflix-red);
-    color: #fff;
-    border: none;
-    padding: 11px 18px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    white-space: nowrap;
-    transition: background 0.2s;
-}
-
-.password-input-wrap button:hover { background: #b20710; }
-
-.password-error {
-    color: #ff6b6b;
-    font-size: 0.85rem;
-    margin-top: 12px;
-    animation: shake 0.3s ease;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    75% { transform: translateX(6px); }
-}
-
-/* Footer & Branding */
-footer {
-    padding: 40px 4%;
-    text-align: center;
-    background: #111;
-    border-top: 1px solid #222;
-    color: #757575;
-}
-
-.footer-dev {
-    color: var(--netflix-red) !important;
-    font-weight: bold;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-}
-
-/* Teams Setlist Interface */
-.teams-container {
-    padding: 100px 4% 50px;
-    min-height: 80vh;
-}
-
-.teams-header {
-    margin-bottom: 20px;
-}
-
-.teams-header h2 {
-    font-size: 1.8rem;
-    margin-bottom: 15px;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* ── Grid de botões de equipe ── */
-.team-btn-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-    width: 100%;
-    max-width: 480px;
-}
-
-/* Botão inativo — apagado para não confundir */
-.team-btn {
-    padding: 14px 8px;
-    border-radius: 10px;
-    border: 2px solid #333;
-    background: #1a1a1a;
-    color: #444;
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.03em;
-    opacity: 0.45;
-}
-
-.team-btn:hover {
-    opacity: 0.75;
-    border-color: #666;
-    color: #999;
-}
-
-/* Botão ativo — cor da equipe, destaque máximo */
-.team-btn[data-team="Start"].team-btn-active    { background:#ff4757; border-color:#ff4757; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(255,71,87,0.6); transform: scale(1.05); }
-.team-btn[data-team="Amarelo"].team-btn-active  { background:#f1c40f; border-color:#f1c40f; color:#000; opacity:1; box-shadow: 0 0 18px rgba(241,196,15,0.6); transform: scale(1.05); }
-.team-btn[data-team="Laranja"].team-btn-active  { background:#e67e22; border-color:#e67e22; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(230,126,34,0.6); transform: scale(1.05); }
-.team-btn[data-team="Azul"].team-btn-active     { background:#3498db; border-color:#3498db; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(52,152,219,0.6); transform: scale(1.05); }
-.team-btn[data-team="Verde"].team-btn-active    { background:#2ecc71; border-color:#2ecc71; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(46,204,113,0.6); transform: scale(1.05); }
-.team-btn[data-team="Branco"].team-btn-active   { background:#f5f6fa; border-color:#f5f6fa; color:#000; opacity:1; box-shadow: 0 0 18px rgba(245,246,250,0.5); transform: scale(1.05); }
-
-/* Quando há um botão ativo, os outros ficam ainda mais apagados */
-.team-btn-grid:has(.team-btn-active) .team-btn:not(.team-btn-active) {
-    opacity: 0.2;
-}
-
-@media (max-width: 400px) {
-    .team-btn-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-    }
-    .team-btn {
-        padding: 16px 8px;
-        font-size: 0.9rem;
-    }
-}
-
-.team-selector {
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 10px;
-    border-radius: 4px;
-    font-size: 1rem;
-    outline: none;
-    min-width: 200px;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-}
-
-.team-selector.team-selected-Start { background-color: #ff4757; color: #fff; border-color: #ff4757; }
-.team-selector.team-selected-Amarelo { background-color: #f1c40f; color: #000; border-color: #f1c40f; }
-.team-selector.team-selected-Laranja { background-color: #e67e22; color: #fff; border-color: #e67e22; }
-.team-selector.team-selected-Azul { background-color: #3498db; color: #fff; border-color: #3498db; }
-.team-selector.team-selected-Verde { background-color: #2ecc71; color: #fff; border-color: #2ecc71; }
-.team-selector.team-selected-Branco { background-color: #f5f6fa; color: #000; border-color: #ccc; }
-
-.team-selector option {
-    background-color: #222;
-    color: #fff;
-}
-.team-selector option.opt-start { background-color: #ff4757; color: #fff; }
-.team-selector option.opt-amarelo { background-color: #f1c40f; color: #000; }
-.team-selector option.opt-laranja { background-color: #e67e22; color: #fff; }
-.team-selector option.opt-azul { background-color: #3498db; color: #fff; }
-.team-selector option.opt-verde { background-color: #2ecc71; color: #fff; }
-.team-selector option.opt-branco { background-color: #f5f6fa; color: #000; }     
-
-.team-actions {
-    display: flex;
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.song-card.setlist-card .card-info {
-    opacity: 1;
-    background: linear-gradient(to top, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.7) 100%);
-}
-
-.setlist-obs {
-    color: #2ecc71;
-    font-weight: bold;
-    font-size: 0.8rem;
-    margin-top: 3px;
-    padding: 2px 0;
-}
-
-/* Mobile Adjustments */
-@media (max-width: 768px) {
-    .search-results-grid {
-        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-        gap: 15px 10px;
-        padding-top: 130px;
-        align-content: start;
+// Configurações Supabase
+const SUPABASE_URL = "https://rxcfnwhgkdauzyuekjxf.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4Y2Zud2hna2RhdXp5dWVranhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTAyODAsImV4cCI6MjA5MjIyNjI4MH0.QewcMlTw0L6gXkz-WXwQvSu-vZXtO3vR48X2a_-FH9g";
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── Controle de Acesso de Líderes ───────────────────────────────────
+const AUTH_KEY = 'ibb_leader_auth';
+const TEAM_KEY = 'ibb_leader_team';
+
+// Fallback local (usado se tabela Supabase não existir)
+const _LOCAL_PWD = {
+    'ibbadm':'Master','start123':'Start','amarelo123':'Amarelo',
+    'laranja123':'Laranja','azul123':'Azul','verde123':'Verde','branco123':'Branco'
+};
+
+async function validatePassword(pwd) {
+    const key = pwd.trim().toLowerCase();
+    try {
+        const { data } = await _supabase
+            .from('app_passwords').select('team')
+            .eq('password_hash', key).maybeSingle();
+        if (data && data.team) return data.team;
+    } catch(e) { /* tabela não existe, usa fallback */ }
+    return _LOCAL_PWD[key] || null;
+}
+
+// --- MODO PERFORMANCE E CIFRAS ---
+const NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+let currentPerformanceSong = null;
+let currentPerformanceMode = 'vocal'; // 'vocal' ou 'musician'
+let currentTransposeSemitones = 0;
+let autoScrollInterval = null;
+let currentZoomLevel = 1.0;
+let currentFontSize = 15;
+// ---------------------------------
+
+// --- Motores de Captura e Transposição ---
+
+async function fetchCifraClubContent(url) {
+    if (!url.includes('cifraclub.com.br')) {
+        alert('Por favor, insira um link válido do Cifra Club.');
+        return null;
     }
 
-    .search-results-grid .song-card {
-        height: 110px;
+    // ── EXPERT STEP 1: Transformação para link de impressão ──────────────
+    // A página de impressão (/imprimir.html) é muito mais fácil de capturar
+    let printUrl = url.trim();
+    if (!printUrl.endsWith('/imprimir.html') && !printUrl.endsWith('/imprimir.html/')) {
+        printUrl = printUrl.replace(/\/$/, ""); // Remove barra final se houver
+        printUrl += '/imprimir.html';
     }
 
-    .search-results-grid .card-info h4 {
-        font-size: 0.75rem;
+    // ── EXPERT STEP 2: Motor de Rotação de Proxies (4 estratégias) ───────
+    const rotation = [
+        { name: 'AllOrigins JSON', url: (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}&ts=${Date.now()}`, type: 'json' },
+        { name: 'AllOrigins Raw',  url: (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&ts=${Date.now()}`, type: 'text' },
+        { name: 'CodeTabs',        url: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, type: 'text' },
+        { name: 'CORSProxy.io',    url: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`, type: 'text' }
+    ];
+
+    console.log('🚀 Iniciando Motor Expert para:', printUrl);
+
+    for (const strategy of rotation) {
+        try {
+            const proxyUrl = strategy.url(printUrl);
+            console.log(`📡 Tentando Estratégia [${strategy.name}]...`);
+            
+            const response = await fetch(proxyUrl);
+            if (!response.ok) {
+                console.warn(`❌ [${strategy.name}] falhou com status: ${response.status}`);
+                continue;
+            }
+
+            let html = '';
+            if (strategy.type === 'json') {
+                const data = await response.json();
+                html = data.contents;
+            } else {
+                html = await response.text();
+            }
+
+            if (!html || html.length < 500) {
+                console.warn(`❌ [${strategy.name}] retornou conteúdo vazio ou inválido.`);
+                continue;
+            }
+
+            // ── EXPERT STEP 3: Extração Cirúrgica ────────────────────────
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Na página de impressão (/imprimir.html), a cifra costuma estar em #cifra_pre
+            // ou em um <pre> direto
+            let cifraElement = doc.querySelector('#cifra_pre') || 
+                               doc.querySelector('.cifra_cnt pre') || 
+                               doc.querySelector('pre');
+            
+            if (cifraElement) {
+                console.log(`✅ SUCESSO via [${strategy.name}]!`);
+                
+                // Limpeza opcional de elementos de propaganda que sobram no print
+                const cleanedText = cifraElement.innerText
+                    .replace(/Ainda não sabe tocar essa música\?[\s\S]*?Aprenda aqui/g, '')
+                    .trim();
+                
+                return cleanedText;
+            }
+        } catch (err) {
+            console.warn(`⚠️ Erro na estratégia [${strategy.name}]:`, err.message);
+        }
     }
 
-    .search-results-grid .card-info p {
-        font-size: 0.6rem;
+    // Se todos falharem, tentamos a URL ORIGINAL sem /imprimir como último recurso
+    if (printUrl !== url) {
+        console.log('🔄 Tentativa final com URL original...');
+        // (Isso é recursivo mas só roda uma vez por causa da condição if)
+        // Por simplicidade, vamos apenas avisar o erro aqui para evitar loop infinito
     }
 
-    header {
-        padding: 10px 4%;
-        flex-wrap: wrap;
-        background-color: #000;
-    }
-
-    .category-overlay {
-        top: 120px;
-        bottom: 0;
-        height: auto;
-        padding-bottom: 80px;
-    }
-
-    .menu-toggle {
-        display: block;
-    }
-
-    nav {
-        display: none;
-        position: absolute;
-        top: 110px;
-        left: 0;
-        width: 100%;
-        background: rgba(0,0,0,0.95);
-        padding: 20px;
-        border-bottom: 1px solid #222;
-    }
-
-    nav.active {
-        display: block;
-    }
-
-    nav ul {
-        flex-direction: column;
-        margin-left: 0;
-    }
-
-    nav ul li {
-        margin: 10px 0;
-    }
-
-    .add-btn-main {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .search-container {
-        display: flex;
-        width: 100%;
-        order: 3;
-        margin-top: 10px;
-    }
-
-    .search-container input {
-        width: 100%;
-        font-size: 16px;
+    const isLocalFile = window.location.protocol === 'file:';
+    let msg = 'O motor Expert não conseguiu furar o bloqueio automaticamente.';
+    
+    if (isLocalFile) {
+        msg += '\n\nO navegador bloqueia essa função em arquivos locais. Tente quando o site estiver online no GitHub.';
+    } else {
+        msg += '\n\nO Cifra Club bloqueou todas as tentativas de captura. \n\nSOLUÇÃO: Abra o link, copie a letra e cole manualmente.';
     }
     
-    .hero {
-        height: 35vh;
+    alert(msg);
+    return null;
+}
+
+function transposeChord(chord, semitones) {
+    if (semitones === 0) return chord;
+
+    const regex = /^([A-G][b#]?)(.*)$/;
+    const match = chord.match(regex);
+    if (!match) return chord;
+
+    const root = match[1];
+    const suffix = match[2];
+
+    const isSharp = root.includes('#') || (!root.includes('b') && semitones > 0);
+    const scale = isSharp ? NOTES_SHARP : NOTES_FLAT;
+    
+    // Normalizar root (Ex: Db -> C# se estivermos usando escala Sharp)
+    let index = NOTES_FLAT.indexOf(root);
+    if (index === -1) index = NOTES_SHARP.indexOf(root);
+    
+    if (index === -1) return chord;
+
+    let newIndex = (index + semitones) % 12;
+    if (newIndex < 0) newIndex += 12;
+
+    return scale[newIndex] + suffix;
+}
+
+function processTransposition(text, semitones) {
+    if (semitones === 0) return text;
+    
+    // Regex para encontrar acordes: Letra maiúscula (A-G) seguida opcionalmente por #/b e complexidades (m, 7, 9, etc)
+    // Evita palavras comuns de letra de música
+    const chordRegex = /\b([A-G][b#]?(?:m|maj|dim|aug|sus|add|add9|[0-9])*(?:\/[A-G][b#]?)?)\b/g;
+    
+    return text.replace(chordRegex, (match) => {
+        if (match.includes('/')) {
+            const parts = match.split('/');
+            return transposeChord(parts[0], semitones) + '/' + transposeChord(parts[1], semitones);
+        }
+        return transposeChord(match, semitones);
+    });
+}
+
+function isAuthenticated() {
+    return sessionStorage.getItem(AUTH_KEY) === 'true';
+}
+
+function getLoggedTeam() {
+    return sessionStorage.getItem(TEAM_KEY) || 'Master';
+}
+
+const pwGateModal  = document.getElementById('passwordGateModal');
+const pwInput      = document.getElementById('leaderPasswordInput');
+const pwError      = document.getElementById('passwordError');
+const pwSubmitBtn  = document.getElementById('submitPasswordBtn');
+const closePwModal = document.querySelector('.close-password-modal');
+
+if (closePwModal) closePwModal.onclick = () => {
+    pwGateModal.style.display = 'none';
+    pwInput.value = '';
+    pwError.style.display = 'none';
+};
+
+// Ativa/desativa modo ADM na interface
+function setAdminMode(active, teamName) {
+    const admBtnEl  = document.getElementById('admBtn');
+    const addNavItem = document.getElementById('addSongNavItem');
+    const editBtn   = document.getElementById('editUrlBtn');
+    const editorPanel = document.getElementById('urlEditorPanel');
+    const addToSetlistBtn = document.getElementById('addToSetlistBtn');
+    const teamAdminActions = document.getElementById('teamAdminActions');
+    const teamAdminStatus = document.getElementById('teamAdminStatus');
+
+    if (active) {
+        sessionStorage.setItem(AUTH_KEY, 'true');
+        if (teamName) sessionStorage.setItem(TEAM_KEY, teamName);
+        const loggedTeam = getLoggedTeam();
+        
+        if (admBtnEl) {
+            admBtnEl.innerHTML = `<i class="fas fa-unlock"></i> ${loggedTeam}`;
+            admBtnEl.classList.add('active');
+        }
+        if (addNavItem) addNavItem.style.display = 'list-item';
+        if (editBtn)   editBtn.style.display = 'flex';
+        if (addToSetlistBtn) addToSetlistBtn.style.display = 'flex';
+        
+        const setlistTeamSelect = document.getElementById('setlistTeamSelect');
+        if (setlistTeamSelect) {
+            setlistTeamSelect.innerHTML = '';
+            if (loggedTeam === 'Master') { // Master
+                ['Start', 'Amarelo', 'Laranja', 'Azul', 'Verde', 'Branco'].forEach(t => {
+                    setlistTeamSelect.innerHTML += `<option value="${t}">${t}</option>`;
+                });
+            } else {
+                setlistTeamSelect.innerHTML = `<option value="${loggedTeam}" selected>${loggedTeam}</option>`;
+            }
+        }
+    } else {
+        sessionStorage.removeItem(AUTH_KEY);
+        sessionStorage.removeItem(TEAM_KEY);
+        if (admBtnEl) {
+            admBtnEl.innerHTML = '<i class="fas fa-lock"></i> ADM';
+            admBtnEl.classList.remove('active');
+        }
+        if (addNavItem) addNavItem.style.display = 'none';
+        if (editBtn)   editBtn.style.display = 'none';
+        if (addToSetlistBtn) addToSetlistBtn.style.display = 'none';
+        if (editorPanel) editorPanel.style.display = 'none';
+        
+        const setlistPanel = document.getElementById('setlistEditorPanel');
+        if (setlistPanel) setlistPanel.style.display = 'none';
+        if (teamAdminActions) teamAdminActions.style.display = 'none';
+        if (teamAdminStatus) teamAdminStatus.style.display = 'none';
+    }
+}
+
+// Inicializa estado ADM ao carregar
+function initAdminState() {
+    setAdminMode(isAuthenticated(), sessionStorage.getItem(TEAM_KEY));
+}
+
+// Botão ADM no menu
+const admBtn = document.getElementById('admBtn');
+
+// Função Única de Submissão de Senha
+async function handlePasswordSubmit() {
+    const rawValue = pwInput.value || '';
+    const btn = document.getElementById('submitPasswordBtn');
+    if (btn) btn.textContent = 'Verificando...';
+
+    const team = await validatePassword(rawValue);
+
+    if (btn) btn.innerHTML = '<i class="fas fa-unlock-alt"></i> Entrar';
+
+    if (team) {
+        pwGateModal.style.display = 'none';
+        pwError.style.display = 'none';
+        sessionStorage.removeItem(TEAM_KEY);
+        setAdminMode(true, team);
+        const currentTeamSelect = document.getElementById('teamSelector');
+        if (currentTeamSelect && document.getElementById('teamsContainer').style.display !== 'none') {
+            currentTeamSelect.dispatchEvent(new Event('change'));
+        }
+    } else {
+        pwError.style.display = 'block';
+        pwInput.value = '';
+        pwInput.focus();
+    }
+}
+
+if (admBtn) {
+    admBtn.onclick = () => {
+        if (isAuthenticated()) {
+            if (confirm('Sair do modo de liderança?')) {
+                setAdminMode(false);
+            }
+            return;
+        }
+        pwGateModal.style.display = 'block';
+        pwInput.value = '';
+        pwError.style.display = 'none';
+        setTimeout(() => pwInput.focus(), 100);
+    };
+}
+
+// Listeners fixos (evita duplicação)
+if (pwSubmitBtn) {
+    pwSubmitBtn.onclick = handlePasswordSubmit;
+}
+if (pwInput) {
+    pwInput.onkeydown = (e) => {
+        if (e.key === 'Enter') handlePasswordSubmit();
+    };
+}
+
+// --- LÓGICA DE PERFORMANCE E INTERAÇÕES ---
+
+function openPerformance(song, mode) {
+    currentPerformanceSong = song;
+    currentPerformanceMode = mode;
+    currentTransposeSemitones = 0;
+    currentZoomLevel = 1.0;
+    currentFontSize = 15;
+    const fontLabel = document.getElementById('fontSizeLabel');
+    if (fontLabel) fontLabel.textContent = '15';
+
+    const screen = document.getElementById('performanceScreen');
+    const content = document.getElementById('performanceContent');
+    const title = document.getElementById('perfTitle');
+    const artist = document.getElementById('perfArtist');
+    const keyIndicator = document.getElementById('perfKeyDisplay');
+
+    screen.classList.remove('vocal-mode');
+    const keyControlGroup = document.getElementById('keyControlGroup');
+
+    if (mode === 'vocal') {
+        screen.classList.add('vocal-mode');
+        if (keyControlGroup) keyControlGroup.style.display = 'none';
+    } else {
+        if (keyControlGroup) keyControlGroup.style.display = 'flex';
+    }
+
+    title.textContent = song.title;
+    artist.textContent = song.artist || 'Artista Desconhecido';
+    
+    // Tenta identificar o tom original no texto (Tom: X ou primeiro acorde encontrado)
+    let originalKey = 'Original';
+    const textContent = song.cifra_text || '';
+    const originalKeyMatch = textContent.match(/Tom:\s*([A-G][b#]?)/i);
+    
+    if (originalKeyMatch) {
+        originalKey = originalKeyMatch[1];
+    } else {
+        // Heurística Pro: busca o primeiro acorde entre colchetes ou no início de linha
+        const firstChordMatch = textContent.match(/\[([A-G][b#]?[^\]]*)\]/) || textContent.match(/\b([A-G][b#]?(?:m|maj|dim|aug|sus|add|[0-9])?)\b/);
+        if (firstChordMatch) {
+            originalKey = firstChordMatch[1].replace(/[\[\]]/g, '').split('/')[0].trim();
+            console.log('🔍 Tom original sugerido pela primeira nota:', originalKey);
+        }
     }
     
-    .modal-content {
-        width: 100%;
-        height: 100%;
-        max-height: 100vh;
-        margin: 0;
-        border-radius: 0;   /* Full screen sem bordas arredondadas no celular */
+    keyIndicator.textContent = originalKey;
+    keyIndicator.dataset.original = originalKey;
+
+    // ── Extrair Capotraste e Tom completo da cifra ────────────────────
+    const capoMatch = textContent.match(/Capotraste\s+na\s+(\d+)[aª°]?\s*casa/i) ||
+                      textContent.match(/Capo\s*[na]*\s*(\d+)/i);
+    const capoGroup = document.getElementById('capoControlGroup');
+    const capoDisplay = document.getElementById('perfCapoDisplay');
+    let _currentCapo = 0;
+
+    if (capoMatch && capoGroup && capoDisplay) {
+        _currentCapo = parseInt(capoMatch[1]);
+        capoDisplay.textContent = `${_currentCapo}ª casa`;
+        capoDisplay.dataset.capo = _currentCapo;
+        capoGroup.style.display = 'flex';
+        // Marcar botão ativo no popup
+        document.querySelectorAll('.capo-btn-item').forEach(b => {
+            b.classList.toggle('active', parseInt(b.dataset.capo) === _currentCapo);
+        });
+    } else if (capoGroup) {
+        capoGroup.style.display = 'none';
+        if (capoDisplay) { capoDisplay.dataset.capo = 0; }
     }
 
-    .video-wrapper {
-        flex-shrink: 0;     /* O vídeo não encolhe */
+    // Tom completo ex: "Bb (forma dos acordes no tom de G)"
+    const tomFullMatch = textContent.match(/Tom:\s*([A-G][b#]?(?:\s*\([^)]+\))?)/i);
+    if (tomFullMatch) {
+        keyIndicator.title = 'Tom: ' + tomFullMatch[1].trim();
+    }
+    // ─────────────────────────────────────────────────────────────────
+
+    renderPerformanceContent();
+
+    screen.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Fechar grade se estiver aberta
+    document.getElementById('keySelectorGrid').style.display = 'none';
+}
+
+function renderPerformanceContent() {
+    const content = document.getElementById('performanceContent');
+    
+    // ── CORREÇÃO CRÍTICA: Limpar o conteúdo ANTES de redesenhar ──
+    content.innerHTML = '';
+
+    let text = currentPerformanceSong.cifra_text || 'Sem letra ou cifra cadastrada.';
+    
+    // Aplicar Transposição
+    if (currentTransposeSemitones !== 0) {
+        text = processTransposition(text, currentTransposeSemitones);
     }
 
-    .modal-info {
-        padding: 14px;
-        overflow-y: auto;
-        flex: 1;
+    const lines = text.split('\n');
+    const isVocal = currentPerformanceMode === 'vocal';
+
+    // No modo vocal, precisamos pré-processar para evitar linhas vazias acumuladas
+    // (quando cifras são removidas, ficam lacunas duplas/triplas)
+    if (isVocal) {
+        // Filtra primeiro, depois renderiza — evita blocos vazios
+        const filteredLines = [];
+        let lastWasEmpty = false;
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+
+            const isCifraOrTab = isChordLineByHeuristic(line) ||
+                /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
+
+            const isAlwaysHidden = /Parte\s+\d+\s+de\s+\d+/i.test(trimmed) ||
+                /^\s*Tom\s*:/i.test(trimmed) ||
+                /^\s*Capotraste/i.test(trimmed) ||
+                /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) ||
+                trimmed.toLowerCase().includes('tab -');
+
+            const isStructureMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(trimmed);
+
+            // Linhas a ignorar no vocal
+            if (isAlwaysHidden) return;
+            if (isCifraOrTab && !isStructureMarker) return;
+
+            // Linha vazia: só adiciona se a linha anterior não era vazia
+            if (trimmed === '') {
+                if (!lastWasEmpty) {
+                    filteredLines.push('');
+                    lastWasEmpty = true;
+                }
+                return;
+            }
+
+            lastWasEmpty = false;
+            filteredLines.push(trimmed);
+        });
+
+        // Remove linha vazia no início ou no fim
+        while (filteredLines.length && filteredLines[0] === '') filteredLines.shift();
+        while (filteredLines.length && filteredLines[filteredLines.length - 1] === '') filteredLines.pop();
+
+        filteredLines.forEach(line => {
+            const lineDiv = document.createElement('div');
+            if (line === '') {
+                lineDiv.className = 'perf-line empty-line';
+                lineDiv.innerHTML = '&nbsp;';
+            } else {
+                lineDiv.className = 'perf-line';
+                const isMarker = /^[\[\(]?(?:Refrão|Coro|Ponte|Final|Verso|Primeira|Segunda|Terceira|Quarta)/i.test(line);
+                if (isMarker) lineDiv.classList.add('structure-marker');
+                lineDiv.textContent = line;
+            }
+            content.appendChild(lineDiv);
+        });
+
+    } else {
+        // Modo músico — renderização completa original
+        lines.forEach(line => {
+            let displayLine = line;
+            const trimmed = line.trim();
+
+            if (trimmed === '') {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'perf-line empty-line';
+                emptyDiv.innerHTML = '&nbsp;';
+                content.appendChild(emptyDiv);
+                return;
+            }
+
+            // Ocultar metadados da cifra no modo músico também
+            if (/^\s*Tom\s*:/i.test(trimmed) || /^\s*Capotraste/i.test(trimmed)) return;
+
+            const isCifraOrTab = isChordLineByHeuristic(line) ||
+                /^[A-Ga-g]?\|[\-\d\s\|pbrh\/\(\)\~\>\.)]+$/.test(trimmed);
+
+            const isAlwaysHidden = /Parte\s+\d+\s+de\s+\d+/i.test(trimmed) ||
+                /^[\[\(]?(?:Intro|Solo|Tab|Dedilhado|Instrumental)/i.test(trimmed) ||
+                trimmed.toLowerCase().includes('tab -');
+
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'perf-line';
+
+            if (isCifraOrTab || isAlwaysHidden) {
+                lineDiv.classList.add('chord-line');
+            }
+
+            lineDiv.textContent = displayLine || ' ';
+            content.appendChild(lineDiv);
+        });
     }
 
-    .url-editor-panel {
-        padding: 12px;
+    // Aplica tamanho de fonte após cada render
+    const c = document.getElementById('performanceContent');
+    if (c) c.style.setProperty('--perf-font-size', currentFontSize + 'px');
+}
+
+// ── LÓGICA DE TRANSPOSIÇÃO PRO ───────────────────────────────────────
+const SCALE = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+// Abrir/Fechar Grade de Tons
+document.getElementById('perfKeyDisplay').onclick = (e) => {
+    e.stopPropagation();
+    const grid = document.getElementById('keySelectorGrid');
+    grid.style.display = grid.style.display === 'none' ? 'block' : 'none';
+};
+
+// Fechar grade ao clicar fora
+document.addEventListener('click', (e) => {
+    const grid = document.getElementById('keySelectorGrid');
+    if (grid && !grid.contains(e.target) && e.target.id !== 'perfKeyDisplay') {
+        grid.style.display = 'none';
     }
+});
 
-    .edit-checkbox-grid {
-        grid-template-columns: 1fr 1fr;
-        max-height: 150px;
-    }
+// Listener para os botões da grade
+document.querySelectorAll('.key-btn').forEach(btn => {
+    btn.onclick = () => {
+        const targetKey = btn.dataset.key;
+        const keyIndicator = document.getElementById('perfKeyDisplay');
+        const originalKey = keyIndicator.dataset.original;
 
-    .checkbox-grid {
-        grid-template-columns: 1fr;
-    }
+        if (originalKey === 'Original') {
+            // Se não detectamos o tom, assumimos que o tom atual é 'C' para permitir o cálculo
+            keyIndicator.dataset.original = 'C';
+            console.warn('Tom não detectado. Usando Dó como base.');
+        }
 
-    .adm-btn {
-        width: 100%;
-        justify-content: center;
-    }
+        const startIndex = SCALE.indexOf(normalizeKey(keyIndicator.dataset.original));
+        const targetIndex = SCALE.indexOf(targetKey);
+        
+        currentTransposeSemitones = (targetIndex - startIndex + 12) % 12;
+        
+        // Atualiza UI
+        document.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        keyIndicator.textContent = targetKey;
+        
+        renderPerformanceContent();
+    };
+});
 
-    .teams-container {
-        padding-top: 130px;
-        min-height: unset;
-    }
-
-    /* Impede gap extra na grade de cards dentro de Equipes */
-    .teams-container .search-results-grid {
-        padding-top: 0;
-    }
+function normalizeKey(key) {
+    const map = { 'C#': 'Db', 'D#': 'Eb', 'Gb': 'F#', 'G#': 'Ab', 'A#': 'Bb' };
+    return map[key] || key;
 }
 
-/* ═══════════════════════════════════════════════════════
-   MODO LOUVOR — Full-Screen Praise View
-   ═══════════════════════════════════════════════════════ */
+document.getElementById('stepUp').onclick = () => {
+    currentTransposeSemitones = (currentTransposeSemitones + 1) % 12;
+    updateKeyIndicatorFromSemitones();
+    renderPerformanceContent();
+};
 
-.praise-mode-modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #080808;
-    z-index: 9999;
-    flex-direction: column;
-    overflow: hidden;
+document.getElementById('stepDown').onclick = () => {
+    currentTransposeSemitones = (currentTransposeSemitones - 1 + 12) % 12;
+    updateKeyIndicatorFromSemitones();
+    renderPerformanceContent();
+};
+
+document.getElementById('restoreKey').onclick = () => {
+    currentTransposeSemitones = 0;
+    const keyIndicator = document.getElementById('perfKeyDisplay');
+    keyIndicator.textContent = keyIndicator.dataset.original;
+    document.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
+    renderPerformanceContent();
+};
+
+function updateKeyIndicatorFromSemitones() {
+    const keyIndicator = document.getElementById('perfKeyDisplay');
+    const originalKey = keyIndicator.dataset.original;
+    if (originalKey === 'Original') return;
+
+    const startIndex = SCALE.indexOf(normalizeKey(originalKey));
+    const newIndex = (startIndex + currentTransposeSemitones + 12) % 12;
+    keyIndicator.textContent = SCALE[newIndex];
 }
 
-.praise-mode-modal.active {
-    display: flex;
+// Função auxiliar para detectar se uma linha é predominantemente composta por acordes
+function isChordLineByHeuristic(line) {
+    const trimmed = line.trim();
+    if (!trimmed) return false;
+
+    // Se a linha tiver muitas letras minúsculas seguidas (palavras), provavelmente é letra
+    // Acordes costumam ter muitos espaços e letras maiúsculas isoladas
+    const words = trimmed.split(/\s+/);
+    let potentialChords = 0;
+    
+    words.forEach(word => {
+        // Padrão básico de acorde: [A-G] seguido de modificadores opcionais 
+        // Adicionada detecção de Baixos com barra (ex: /G ou C/E)
+        if (/^[A-G][b#]?(?:m|maj|dim|aug|sus|add|[0-9]|M|\+|\-|\/|[A-G])*$/.test(word) || /^\/[A-G][b#]?$/.test(word)) {
+            potentialChords++;
+        }
+    });
+
+    // Se mais de 30% das "palavras" parecem acordes, ou a linha só tem acordes e símbolos
+    return potentialChords > 0 && (potentialChords / words.length) > 0.3;
 }
 
-/* ─── Header / Controls ─── */
-.praise-header {
-    background: rgba(15,15,15,0.97);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    padding: 10px 14px 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    position: relative;
-    z-index: 2;
-    backdrop-filter: blur(12px);
-    transition: transform 0.35s cubic-bezier(.4,0,.2,1);
-    flex-shrink: 0;
+// Botão Voltar
+document.getElementById('closePerfBtn').onclick = () => {
+    document.getElementById('performanceScreen').style.display = 'none';
+    document.body.style.overflow = '';
+    stopAutoScroll();
+};
+
+// Os listeners de Zoom e Transposição antigos foram removidos para dar lugar à nova Grade Pro.
+
+// Auto Scroll
+let scrollSpeed = 3;
+
+function toggleAutoScroll() {
+    if (autoScrollInterval) { stopAutoScroll(); } else { startAutoScroll(); }
 }
 
-.praise-header.hidden {
-    transform: translateY(-100%);
+function startAutoScroll() {
+    const content = document.getElementById('performanceContent');
+    const btn = document.getElementById('toggleScroll');
+    if (btn) btn.innerHTML = '<i class="fas fa-pause"></i>';
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = setInterval(() => {
+        if (content.scrollTop + content.clientHeight >= content.scrollHeight - 4) {
+            stopAutoScroll(); return;
+        }
+        content.scrollTop += 1;
+    }, Math.round(110 - scrollSpeed * 10));
 }
 
-.praise-header-row1 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+function stopAutoScroll() {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
+    const btn = document.getElementById('toggleScroll');
+    if (btn) btn.innerHTML = '<i class="fas fa-play"></i>';
 }
 
-.praise-song-info { flex: 1; min-width: 0; }
+document.getElementById('toggleScroll').onclick = toggleAutoScroll;
 
-.praise-song-info h2 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #fff;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+document.getElementById('scrollFaster').onclick = () => {
+    if (scrollSpeed < 10) { scrollSpeed++; if (autoScrollInterval) startAutoScroll(); }
+};
+document.getElementById('scrollSlower').onclick = () => {
+    if (scrollSpeed > 1) { scrollSpeed--; if (autoScrollInterval) startAutoScroll(); }
+};
+
+// Capturar Cifra Automaticamente (ADM)
+const btnCapturar = document.getElementById('btnCapturarCifra');
+if (btnCapturar) {
+    btnCapturar.onclick = async () => {
+        const url = document.getElementById('addCifraClubUrl').value.trim();
+        if (!url) { alert('Insira o link primeiro!'); return; }
+        
+        const oldText = btnCapturar.textContent;
+        btnCapturar.textContent = 'Capturando...';
+        btnCapturar.disabled = true;
+        
+        const content = await fetchCifraClubContent(url);
+        if (content) {
+            // Se já tivermos um textarea de pré-visualização (opcional) ou salvar direto
+            // Vamos guardar numa variável global temporária para o form.onsubmit
+            window.tempCapturedCifra = content;
+            alert('✅ Conteúdo capturado com sucesso!');
+        }
+        
+        btnCapturar.textContent = oldText;
+        btnCapturar.disabled = false;
+    };
 }
+// ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────
 
-.praise-song-info p {
-    font-size: 0.78rem;
-    color: #888;
-    margin: 0;
-}
+let repertoireData = [];
+const categoriesContainer = document.getElementById('categoriesContainer');
+const searchResultsGrid = document.getElementById('searchResults');
+const searchInput = document.getElementById('searchInput');
+const modal = document.getElementById('videoModal');
+const closeModal = document.querySelector('.close-modal');
+const videoIframe = document.getElementById('videoIframe');
+const header = document.getElementById('header');
+const categoryOverlay = document.getElementById('categoryOverlay');
+const categoryList = document.getElementById('categoryList');
 
-.praise-controls-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
+// Categorias Fixas e Ordem Desejada
+const FIXED_CATEGORIES = [
+    "Novos",
+    "Convite", 
+    "Celebração/Adoração/Louvor", 
+    "Consagração", 
+    "Busca", 
+    "Contemplação/Adoração e Louvor", 
+    "Ceia", 
+    "Comunhão", 
+    "Fé", 
+    "Clássicas"
+];
 
-/* Mode Toggle */
-.praise-mode-toggle {
-    display: flex;
-    background: rgba(255,255,255,0.07);
-    border-radius: 8px;
-    padding: 3px;
-    gap: 2px;
-}
+let ALL_CATEGORIES = [...FIXED_CATEGORIES];
 
-.praise-mode-toggle button {
-    background: transparent;
-    border: none;
-    color: #888;
-    padding: 5px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
+// Carregar dados do Supabase
+async function fetchData() {
+    _lastFetchTime = Date.now();
+    try {
+        const { data, error } = await _supabase
+            .from('songs')
+            .select('*')
+            .neq('status', 'DELETED')
+            .order('title', { ascending: true });
 
-.praise-mode-toggle button.active {
-    background: var(--netflix-red);
-    color: #fff;
-}
+        if (error) throw error;
 
-/* Control Groups */
-.praise-control-group {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(255,255,255,0.07);
-    border-radius: 8px;
-    padding: 4px 9px;
-}
+        ALL_CATEGORIES = [...FIXED_CATEGORIES];
+        const grouped = {};
 
-.praise-control-group label {
-    font-size: 0.7rem;
-    color: #888;
-    margin: 0;
-    white-space: nowrap;
-}
+        data.forEach(song => {
+            const cats = Array.isArray(song.categories) ? song.categories : (typeof song.categories === "string" ? [song.categories] : ["Geral"]);
+            if (true) {
+                cats.forEach(cat => {
+                    if (!ALL_CATEGORIES.includes(cat)) {
+                        ALL_CATEGORIES.push(cat);
+                    }
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(song);
+                });
+            }
+            // FIX: músicas com status NOVA também aparecem na categoria "Novos"
+            // independente de terem 'Novos' no array categories[]
+            if (song.status === 'NOVA' && !cats.includes('Novos')) {
+                if (!grouped['Novos']) grouped['Novos'] = [];
+                if (!grouped['Novos'].find(s => s.id === song.id || s.title === song.title)) {
+                    grouped['Novos'].push(song);
+                }
+            }
+        });
 
-.praise-ctrl-btn {
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: #fff;
-    width: 26px; height: 26px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-    flex-shrink: 0;
-}
+        // Ordenar mantendo a prioridade das FIXAS e depois as DINAMICAS
+        const sortedGrouped = {};
+        ALL_CATEGORIES.forEach(cat => {
+            if (grouped[cat]) sortedGrouped[cat] = grouped[cat];
+        });
 
-.praise-ctrl-btn:hover { background: rgba(255,255,255,0.22); }
+        // Montar estrutura final apenas com categorias que têm músicas
+        repertoireData = Object.keys(sortedGrouped)
+            .filter(name => sortedGrouped[name].length > 0)
+            .map(name => ({
+                category: name,
+                items: sortedGrouped[name]
+            }));
 
-.praise-value-display {
-    font-size: 0.82rem;
-    color: #fff;
-    min-width: 28px;
-    text-align: center;
-    font-weight: 600;
-}
-
-/* Musicians-only controls */
-.praise-musicians-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-/* Capo Select */
-.praise-capo-select {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
-    padding: 3px 7px;
-    border-radius: 5px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    outline: none;
-}
-
-/* Auto-scroll */
-.praise-scroll-btn {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #aaa;
-    padding: 5px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.praise-scroll-btn.active {
-    background: rgba(39,174,96,0.25);
-    border-color: #27ae60;
-    color: #2ecc71;
-}
-
-.praise-speed-slider {
-    -webkit-appearance: none;
-    width: 65px; height: 4px;
-    border-radius: 2px;
-    background: rgba(255,255,255,0.15);
-    outline: none;
-    cursor: pointer;
-}
-
-.praise-speed-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 13px; height: 13px;
-    border-radius: 50%;
-    background: var(--netflix-red);
-    cursor: pointer;
-}
-
-/* Close button */
-.praise-close-btn {
-    background: rgba(229,9,20,0.12);
-    border: 1px solid rgba(229,9,20,0.3);
-    color: #e50914;
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-
-.praise-close-btn:hover {
-    background: var(--netflix-red);
-    color: #fff;
-}
-
-/* ─── Content Area ─── */
-.praise-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 28px 5% 100px;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Lyrics only */
-.praise-lyrics {
-    max-width: 680px;
-    margin: 0 auto;
-    color: #f2f2f2;
-    line-height: 2;
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-family: 'Roboto', sans-serif;
-    text-align: left;
-}
-
-/* Cifra (chords + lyrics) */
-.praise-cifra {
-    max-width: 860px;
-    margin: 0 auto;
-    color: #f0f0f0;
-    line-height: 2.3;
-    white-space: pre;
-    font-family: 'Roboto Mono', 'Courier New', monospace;
-    word-break: break-word;
-    overflow-x: auto;
-    text-align: left;
-}
-
-/* Highlighted chords — amber/gold */
-.praise-chord {
-    color: #f5c842;
-    font-weight: 700;
-}
-
-/* Empty state */
-.praise-no-cifra {
-    text-align: center;
-    padding: 60px 20px;
-    color: #555;
-}
-
-.praise-no-cifra i {
-    font-size: 3rem;
-    margin-bottom: 16px;
-    display: block;
-    color: #2a2a2a;
-}
-
-.praise-no-cifra p { font-size: 0.95rem; line-height: 1.6; }
-
-/* Floating toggle controls button */
-.praise-toggle-header {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(20,20,20,0.92);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: #aaa;
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10001;
-    backdrop-filter: blur(10px);
-    transition: all 0.2s;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-}
-
-.praise-toggle-header:hover {
-    background: rgba(229,9,20,0.15);
-    border-color: var(--netflix-red);
-    color: var(--netflix-red);
-}
-
-/* ─── Setlist Card Praise Buttons ─── */
-.setlist-card {
-    overflow: visible !important;
-    height: auto !important;
-    min-height: 140px;
-}
-
-.setlist-praise-btns {
-    display: flex;
-    gap: 5px;
-    padding: 6px 6px 6px;
-    background: rgba(0,0,0,0.6);
-}
-
-.setlist-praise-btn {
-    flex: 1;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #bbb;
-    padding: 5px 6px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.7rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: all 0.2s;
-}
-
-.setlist-praise-btn.vocal-btn:hover {
-    background: rgba(52,152,219,0.25);
-    border-color: #3498db;
-    color: #5dade2;
-}
-
-.setlist-praise-btn.musician-btn:hover {
-    background: rgba(245,200,66,0.15);
-    border-color: #f5c842;
-    color: #f5c842;
-}
-
-/* Lyrics textarea in forms */
-.add-song-form textarea,
-.url-editor-panel textarea {
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    font-family: 'Roboto', sans-serif;
-    outline: none;
-    width: 100%;
-    resize: vertical;
-    transition: border-color 0.2s;
-    line-height: 1.6;
-}
-
-.add-song-form textarea:focus,
-.url-editor-panel textarea:focus {
-    border-color: var(--netflix-red);
-}
-
-/* Cifra Club Input Group */
-.cifraclub-input-group {
-    display: flex;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-.capture-btn {
-    background: #f5c842;
-    color: #000;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: background 0.3s;
-}
-
-.capture-btn:hover {
-    background: #dab33a;
-}
-
-/* Performance Screen */
-.performance-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #000;
-    color: #fff;
-    z-index: 5000;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* garante que header + player + content fiquem dentro da tela */
-}
-
-.perf-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 4%;
-    background: #141414;
-    border-bottom: 1px solid #333;
-    flex-shrink: 0;
-    position: relative; /* necessário para o key-grid-popup ser posicionado em relação ao header */
-    z-index: 10;
-}
-
-.perf-back-btn {
-    background: transparent;
-    border: 1px solid #555;
-    color: #fff;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.perf-title-group {
-    text-align: center;
-}
-
-.perf-title-group h1 {
-    font-size: 1.2rem;
-    margin-bottom: 2px;
-}
-
-.perf-title-group p {
-    font-size: 0.8rem;
-    color: #aaa;
-}
-
-.perf-controls {
-    display: flex;
-    gap: 20px;
-}
-
-.control-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-.control-label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    color: #888;
-}
-
-.transpose-btns {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #222;
-    padding: 5px 15px;
-    border-radius: 4px;
-}
-
-.key-selector-trigger {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    min-width: 80px;
-}
-
-/* Grade de Tons Estilo Cifra Club (Visual Dark Pro) */
-.key-grid-popup {
-    position: absolute;
-    top: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #222; /* Fundo Escuro */
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    z-index: 10000;
-    width: 280px;
-    border: 1px solid #444;
-}
-
-@media (max-width: 600px) {
-    .key-grid-popup {
-        width: 92%;
-        top: 60px;
-        padding: 10px;
+        renderRepertoire(repertoireData);
+        populateCategoryMenu();
+        updateFooter();
+        initAdminState(); // Respeita estado de auth entre navegações
+    } catch (error) {
+        console.error("Erro ao carregar dados do Supabase:", error);
+        // Fallback para JSON local se o banco falhar (opcional)
     }
 }
 
-.key-grid-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+// Extrair Thumbnail
+function getYouTubeThumbnail(song, quality = 'hqdefault') {
+    if (song.vid_id) {
+        return `https://img.youtube.com/vi/${song.vid_id}/${quality}.jpg`;
+    }
+    const url = song.url;
+    if (!url) return 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=600&auto=format&fit=crop';
+    
+    const idMatch = url.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|shorts\/)([^&?#/ ]+)/);
+    if (idMatch && !url.includes('listType=search')) {
+        return `https://img.youtube.com/vi/${idMatch[1]}/${quality}.jpg`;
+    }
+    return 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=600&auto=format&fit=crop';
 }
 
-.half-step-btn {
-    background: #333;
-    border: 1px solid #555;
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    flex: 1;
-    margin: 0 5px;
-    font-weight: 500;
+function renderRepertoire(data) {
+    categoriesContainer.innerHTML = '';
+    categoriesContainer.style.display = 'block';
+    searchResultsGrid.style.display = 'none';
+    categoryOverlay.style.display = 'none';
+
+    data.forEach(category => {
+        if (category.items.length === 0) return;
+        
+        const row = document.createElement('div');
+        row.className = 'category-row';
+        row.innerHTML = `<h2>${category.category}</h2>`;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'row-wrapper';
+        
+        const container = document.createElement('div');
+        container.className = 'row-container';
+        
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'nav-btn prev-btn';
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.onclick = () => container.scrollBy({ left: -600, behavior: 'smooth' });
+        
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'nav-btn next-btn';
+        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.onclick = () => container.scrollBy({ left: 600, behavior: 'smooth' });
+        
+        category.items.forEach(song => {
+            container.appendChild(createSongCard(song));
+        });
+        
+        wrapper.appendChild(prevBtn);
+        wrapper.appendChild(container);
+        wrapper.appendChild(nextBtn);
+        row.appendChild(wrapper);
+        categoriesContainer.appendChild(row);
+    });
 }
 
-.half-step-btn:hover {
-    background: #444;
+function createSongCard(song) {
+    const card = document.createElement('div');
+    card.className = 'song-card';
+    card.innerHTML = `
+        <img src="${getYouTubeThumbnail(song)}" alt="${song.title}" loading="lazy">
+        <div class="card-info">
+            <h4>${song.title}</h4>
+            <p>${song.artist || 'Vários'} ${song.status ? '• ' + song.status : ''}</p>
+        </div>
+    `;
+    card.onclick = () => openVideo(song);
+    return card;
 }
 
-.key-grid-items {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 15px;
+function renderGrid(songs, title) {
+    categoriesContainer.style.display = 'none';
+    searchResultsGrid.innerHTML = `
+        <div style="grid-column: 1/-1; margin-bottom: 20px;">
+            <h2>${title}</h2>
+        </div>
+    `;
+    searchResultsGrid.style.display = 'grid';
+    document.getElementById('hero').style.display = 'none';
+    categoryOverlay.style.display = 'none';
+
+    songs.forEach(song => {
+        searchResultsGrid.appendChild(createSongCard(song));
+    });
 }
 
-.key-btn {
-    background: #333;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 12px 0;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
+// Preencher Menu de Categorias e Checkboxes
+function populateCategoryMenu() {
+    categoryList.innerHTML = '';
+    const checkboxGrid = document.getElementById('categoryCheckboxes');
+    if (checkboxGrid) checkboxGrid.innerHTML = '';
+
+    ALL_CATEGORIES.forEach(catName => {
+        // Menu Overlay
+        const item = document.createElement('div');
+        item.className = 'category-item';
+        item.textContent = catName;
+        item.onclick = () => {
+            const songs = repertoireData.find(c => c.category === catName)?.items || [];
+            renderGrid(songs, catName);
+            categoryOverlay.style.display = 'none';
+        };
+        categoryList.appendChild(item);
+
+        // Cadastro Modal
+        if (checkboxGrid) {
+            const label = document.createElement('label');
+            label.className = 'checkbox-item';
+            label.innerHTML = `<input type="checkbox" name="category" value="${catName}"> ${catName}`;
+            checkboxGrid.appendChild(label);
+        }
+    });
 }
 
-.key-btn:hover {
-    background: #444;
+// Abrir Vídeo
+function openVideo(song) {
+    if (!song) return;
+    
+    // Garantir que a URL seja do tipo Embed para o YouTube
+    let finalUrl = song.url || '';
+    const idMatch = finalUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|shorts\/)([^&?#/ ]+)/);
+    if (idMatch) {
+        finalUrl = `https://www.youtube.com/embed/${idMatch[1]}`;
+    }
+
+    const mTitle = document.getElementById('modalTitle');
+    const mArtist = document.getElementById('modalArtist');
+    const mObs = document.getElementById('modalObs');
+    
+    if (mTitle) mTitle.textContent = song.title;
+    if (mArtist) mArtist.textContent = song.artist || 'Vários';
+    if (mObs) mObs.textContent = song.obs ? `Obs: ${song.obs}` : '';
+    
+    if (videoIframe) videoIframe.src = finalUrl;
+    if (modal) modal.style.display = 'block';
+
+    // ── Abas Vocal/Músico + botão Ver Letra no modal ──────────────────
+    const modalPerf = document.getElementById('modalPerfTabs');
+    const perfBtn   = document.getElementById('modalOpenPerfBtn');
+    const hasCifra  = song.cifra_text && song.cifra_text.trim().length > 10;
+    if (modalPerf) {
+        modalPerf.style.display = hasCifra ? 'flex' : 'none';
+        modalPerf.querySelectorAll('.modal-perf-btn').forEach(b => b.classList.remove('active'));
+        const vocalBtn = modalPerf.querySelector('[data-mode="vocal"]');
+        if (vocalBtn) vocalBtn.classList.add('active');
+    }
+    if (perfBtn) perfBtn.style.display = hasCifra ? 'block' : 'none';
+    window._modalCurrentSong = song;
+
+    // Resetar painel de edição
+    const urlEditorPanel = document.getElementById('urlEditorPanel');
+    const newUrlInput    = document.getElementById('newUrlInput');
+    const newArtistInput = document.getElementById('newArtistInput');
+    const newTitleInput  = document.getElementById('newTitleInput');
+    urlEditorPanel.style.display = 'none';
+    newUrlInput.value    = song.url    || '';
+    newArtistInput.value = song.artist || '';
+    newTitleInput.value  = song.title  || '';
+    const newObsInput = document.getElementById('newObsInput');
+    if (newObsInput) newObsInput.value = song.obs || '';
+
+    // Resetar zona de exclusão
+    const deleteConfirmStep = document.getElementById('deleteConfirmStep');
+    if (deleteConfirmStep) deleteConfirmStep.style.display = 'none';
+
+    // ── Preencher checkboxes de categorias ──────────────────────────────
+    const editCatGrid = document.getElementById('editCategoryCheckboxes');
+    if (editCatGrid) {
+        editCatGrid.innerHTML = '';
+        ALL_CATEGORIES.forEach(cat => {
+            const checked = (song.categories || []).includes(cat) ? 'checked' : '';
+            const label = document.createElement('label');
+            label.innerHTML = `<input type="checkbox" name="editCat" value="${cat}" ${checked}> ${cat}`;
+            editCatGrid.appendChild(label);
+        });
+    }
+
+    // ── Botão Editar Versão (toggle painel) ─────────────────────────────
+    const editBtn = document.getElementById('editUrlBtn');
+    editBtn.onclick = () => {
+        const isVisible = urlEditorPanel.style.display !== 'none';
+        urlEditorPanel.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) {
+            newUrlInput.focus();
+            // Preencher campos de cifra se existirem
+            const editCifraText = document.getElementById('editCifraText');
+            if (editCifraText) editCifraText.value = song.cifra_text || '';
+            
+            const editCifraUrl = document.getElementById('editCifraClubUrl');
+            if (editCifraUrl) editCifraUrl.value = song.cifraclub_url || '';
+        }
+    };
+
+    // ── Botão Capturar na Edição ────────────────────────────────────────
+    const btnCapturarEdit = document.getElementById('btnCapturarCifraEdit');
+    if (btnCapturarEdit) {
+        btnCapturarEdit.onclick = async () => {
+            const url = document.getElementById('editCifraClubUrl').value.trim();
+            if (!url) { alert('Insira o link primeiro!'); return; }
+            
+            btnCapturarEdit.textContent = 'Capturando...';
+            const content = await fetchCifraClubContent(url);
+            if (content) {
+                document.getElementById('editCifraText').value = content;
+                alert('✅ Conteúdo capturado! Não esqueça de salvar.');
+            }
+            btnCapturarEdit.textContent = 'Capturar';
+        };
+    }
+
+    // ── Fechar painel ───────────────────────────────────────────────────
+    document.getElementById('cancelUrlBtn').onclick = () => {
+        urlEditorPanel.style.display = 'none';
+    };
+
+    // ── Salvar URL ──────────────────────────────────────────────────────
+    document.getElementById('saveUrlBtn').onclick = async () => {
+        const newUrl = newUrlInput.value.trim();
+        if (!newUrl) { alert('Cole uma URL válida!'); return; }
+
+        const idMatch = newUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|shorts\/)([^&?#/ ]+)/);
+        const newVidId = idMatch ? idMatch[1] : null;
+        const finalUrl = newVidId ? `https://www.youtube.com/embed/${newVidId}` : newUrl;
+
+        const btn = document.getElementById('saveUrlBtn');
+        btn.textContent = 'Salvando...';
+        try {
+            const { error } = await _supabase.from('songs')
+                .update({ url: finalUrl, vid_id: newVidId })
+                .eq('title', song.title);
+            if (error) throw error;
+            videoIframe.src = finalUrl;
+            song.url = finalUrl;
+            song.vid_id = newVidId;
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar URL';
+            alert('✅ URL atualizada!');
+            fetchData();
+        } catch (err) {
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar URL';
+            alert('Erro: ' + err.message);
+        }
+    };
+
+    // ── Salvar Letra/Cifra ──────────────────────────────────────────────
+    const saveCifraBtn = document.getElementById('saveCifraBtn');
+    if (saveCifraBtn) {
+        saveCifraBtn.onclick = async () => {
+            const rawText = document.getElementById('editCifraText').value;
+            const cifraUrl = document.getElementById('editCifraClubUrl').value.trim();
+            const btn = document.getElementById('saveCifraBtn');
+            btn.textContent = 'Salvando...';
+
+            try {
+                const { error } = await _supabase.from('songs')
+                    .update({ 
+                        cifra_text: rawText,
+                        cifraclub_url: cifraUrl 
+                    })
+                    .eq('id', song.id);
+                if (error) throw error;
+                song.cifra_text = rawText;
+                song.cifraclub_url = cifraUrl;
+                alert('✅ Dados salvos com sucesso!');
+            } catch (err) {
+                alert('Erro ao salvar: ' + err.message);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i> Salvar Letra/Cifra';
+            }
+        };
+    }
+
+    // ── Salvar Nome do Louvor ────────────────────────────────────────────
+    document.getElementById('saveTitleBtn').onclick = async () => {
+        const newTitle = newTitleInput.value.trim();
+        if (!newTitle) { alert('Digite o nome do louvor!'); return; }
+        if (newTitle === song.title) { alert('O nome não foi alterado.'); return; }
+
+        const btn = document.getElementById('saveTitleBtn');
+        btn.textContent = 'Salvando...';
+        try {
+            // Usa song.id para não depender do título atual como chave de busca
+            const filter = song.id ? _supabase.from('songs').update({ title: newTitle }).eq('id', song.id)
+                                   : _supabase.from('songs').update({ title: newTitle }).eq('title', song.title);
+            const { error } = await filter;
+            if (error) throw error;
+            song.title = newTitle;
+            document.getElementById('modalTitle').textContent = newTitle;
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Nome';
+            alert('✅ Nome do louvor atualizado!');
+            fetchData();
+        } catch (err) {
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Nome';
+            alert('Erro: ' + err.message);
+        }
+    };
+
+    // ── Salvar Artista ──────────────────────────────────────────────────
+    document.getElementById('saveArtistBtn').onclick = async () => {
+        const newArtist = newArtistInput.value.trim();
+        if (!newArtist) { alert('Digite o nome do artista!'); return; }
+
+        const btn = document.getElementById('saveArtistBtn');
+        btn.textContent = 'Salvando...';
+        try {
+            const { error } = await _supabase.from('songs')
+                .update({ artist: newArtist })
+                .eq('title', song.title);
+            if (error) throw error;
+            song.artist = newArtist;
+            document.getElementById('modalArtist').textContent = newArtist;
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Artista';
+            alert('✅ Artista atualizado!');
+            fetchData();
+        } catch (err) {
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Artista';
+            alert('Erro: ' + err.message);
+        }
+    };
+
+    // ── Salvar Observações ──────────────────────────────────────────────────
+    document.getElementById('saveObsBtn').onclick = async () => {
+        const newObsInput = document.getElementById('newObsInput');
+        const newObs = newObsInput ? newObsInput.value.trim() : '';
+        const btn = document.getElementById('saveObsBtn');
+        btn.textContent = 'Salvando...';
+        try {
+            const filter = song.id ? _supabase.from('songs').update({ obs: newObs }).eq('id', song.id)
+                                   : _supabase.from('songs').update({ obs: newObs }).eq('title', song.title);
+            const { error } = await filter;
+            if (error) throw error;
+            song.obs = newObs;
+            document.getElementById('modalObs').textContent = newObs ? `Obs: ${newObs}` : '';
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Obs';
+            alert('✅ Observação atualizada!');
+            fetchData();
+        } catch (err) {
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Obs';
+            alert('Erro: ' + err.message);
+        }
+    };
+
+    // ── Salvar Categorias ────────────────────────────────────────────────
+    document.getElementById('saveCategoriesBtn').onclick = async () => {
+        const selected = Array.from(
+            document.querySelectorAll('input[name="editCat"]:checked')
+        ).map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert('Selecione pelo menos uma categoria!');
+            return;
+        }
+
+        const btn = document.getElementById('saveCategoriesBtn');
+        btn.textContent = 'Salvando...';
+        try {
+            const { error } = await _supabase.from('songs')
+                .update({ categories: selected })
+                .eq('title', song.title);
+            if (error) throw error;
+            song.categories = selected;
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Categorias';
+            alert('✅ Categorias atualizadas!');
+            fetchData();
+        } catch (err) {
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Categorias';
+            alert('Erro: ' + err.message);
+        }
+    };
+
+    // ── Excluir Música (2 etapas) ────────────────────────────────────────
+    document.getElementById('deleteSongBtn').onclick = () => {
+        deleteConfirmStep.style.display = 'block';
+    };
+
+    document.getElementById('cancelDeleteBtn').onclick = () => {
+        deleteConfirmStep.style.display = 'none';
+    };
+
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        const btn = document.getElementById('confirmDeleteBtn');
+        const oldText = btn.innerHTML;
+        btn.textContent = 'Excluindo...';
+        
+        console.log('Arquivando música (Soft Delete):', { id: song.id, title: song.title });
+
+        try {
+            // Soft delete: Apenas marca como DELETED para o sincronizador respeitar a exclusão
+            const { data, error } = await _supabase.from('songs')
+                .update({ status: 'DELETED' })
+                .eq('id', song.id)
+                .select();
+            
+            if (error) {
+                console.error('Erro ao arquivar música:', error);
+                throw error;
+            }
+
+            console.log('Música arquivada:', data);
+
+            modal.style.display = 'none';
+            videoIframe.src = '';
+            alert(`✅ "${song.title}" foi removido do repertório.`);
+            
+            // Força a recarga total dos dados
+            setTimeout(async () => {
+                await fetchData();
+            }, 300);
+            
+        } catch (err) {
+            console.error('Erro fatal na exclusão:', err);
+            btn.innerHTML = oldText;
+            alert('Erro ao excluir: ' + err.message);
+        }
+    };
 }
 
-.key-btn.active {
-    background: var(--netflix-red);
-    color: #fff;
-    border-color: var(--netflix-red);
+// Cadastro de Música
+const addSongModal = document.getElementById('addSongModal');
+const addSongBtn = document.getElementById('addSongBtn');
+const closeAddModal = document.querySelector('.close-add-modal');
+const addSongForm = document.getElementById('addSongForm');
+
+if (addSongBtn) {
+    addSongBtn.onclick = () => {
+        addSongModal.style.display = 'block';
+    };
 }
 
-.restore-key-btn {
-    width: 100%;
-    background: #333;
-    border: 1px solid #555;
-    padding: 10px;
-    border-radius: 6px;
-    color: #ff5e5e;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
+if (closeAddModal) {
+    closeAddModal.onclick = () => {
+        addSongModal.style.display = 'none';
+    };
 }
 
-/* ── Capotraste ── */
-.capo-popup {
-    top: 70px;
-}
-.capo-grid-items {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-}
-.capo-btn-item {
-    background: #333;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 10px 4px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: bold;
-    text-align: center;
-    transition: background 0.2s, border-color 0.2s;
-}
-.capo-btn-item:hover {
-    background: #444;
-}
-.capo-btn-item.active {
-    background: rgba(229,9,20,0.2);
-    border-color: var(--netflix-red);
-    color: var(--netflix-red);
-}
-.capo-btn {
-    font-size: 0.78rem !important;
-    min-width: 60px;
+if (addSongForm) {
+    addSongForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('addTitle').value;
+        const artist = document.getElementById('addArtist').value;
+        const addObsInput = document.getElementById('addObs');
+        const obs = addObsInput ? addObsInput.value.trim() : null;
+        const url = document.getElementById('addUrl').value;
+        const checkedCats = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
+
+        if (checkedCats.length === 0) {
+            alert("Selecione pelo menos uma categoria!");
+            return;
+        }
+
+        const idMatch = url.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|shorts\/)([^&?#/ ]+)/);
+        const vidId = idMatch ? idMatch[1] : null;
+
+        try {
+            const trimmedTitle = title.trim();
+            const trimmedArtist = artist.trim();
+            const { error } = await _supabase
+                .from('songs')
+                .upsert({ 
+                    title: trimmedTitle, 
+                    artist: trimmedArtist, 
+                    obs,
+                    url: url ? `https://www.youtube.com/embed/${vidId}` : null, 
+                    vid_id: vidId, 
+                    categories: checkedCats,
+                    status: checkedCats.includes('Novos') ? 'NOVA' : '',
+                    cifraclub_url: document.getElementById('addCifraClubUrl').value.trim(),
+                    cifra_text: window.tempCapturedCifra || null
+                }, { onConflict: 'title' });
+        
+        window.tempCapturedCifra = null; // Limpa após usar
+
+            if (error) throw error;
+            alert("Louvor cadastrado!");
+            addSongModal.style.display = 'none';
+            addSongForm.reset();
+            fetchData();
+        } catch (err) {
+            alert("Erro ao cadastrar: " + err.message);
+        }
+    };
 }
 
-anspose-btns button, .perf-controls button {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 1.1rem;
-    cursor: pointer;
-    width: 30px;
+// Menu Mobile
+const menuToggle = document.getElementById('menuToggle');
+const navbar = document.getElementById('navbar');
+
+if (menuToggle) {
+    menuToggle.onclick = () => {
+        navbar.classList.toggle('active');
+    };
 }
 
-.perf-controls button:hover {
-    color: var(--netflix-red);
+// Fechar menu mobile ao clicar em qualquer opção
+document.querySelectorAll('#navbar a, #navbar button').forEach(item => {
+    item.addEventListener('click', () => {
+        navbar.classList.remove('active');
+    });
+});
+
+// Search Logic
+searchInput.oninput = (e) => {
+    const term = e.target.value.toLowerCase().trim();
+    if (term === "") {
+        resetView();
+        return;
+    }
+    const allSongs = repertoireData.flatMap(cat => cat.items);
+    
+    // Lista de termos para bloqueio agressivo de duplicatas
+    const blockList = ['ao vivo', '( ao vivo )', '(ao vivo)'];
+
+    // Garantir unicidade total por título (trim para evitar espaços diferentes)
+    const uniqueSongsMap = new Map();
+    allSongs.forEach(s => {
+        const titleLower = s.title.toLowerCase().trim();
+        const artistLower = (s.artist || '').toLowerCase().trim();
+        
+        // Se estiver na blocklist e já houver uma versão limpa, ou for apenas indesejada, pula
+        const isBlacklisted = blockList.some(term => titleLower.includes(term) || artistLower.includes(term));
+        if (isBlacklisted) return;
+
+        if (!uniqueSongsMap.has(titleLower)) {
+            uniqueSongsMap.set(titleLower, s);
+        }
+    });
+    const uniqueSongs = Array.from(uniqueSongsMap.values());
+
+    const filtered = uniqueSongs.filter(song => 
+        song.status !== 'DELETED' && (
+            song.title.toLowerCase().includes(term) || 
+            (song.artist && song.artist.toLowerCase().includes(term))
+        )
+    );
+    renderGrid(filtered, `Resultados para: "${term}"`);
+};
+
+function resetView() {
+    renderRepertoire(repertoireData);
+    document.getElementById('hero').style.display = 'flex';
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('homeNav').classList.add('active');
+    searchInput.value = '';
+    categoryOverlay.style.display = 'none';
+    const teamsCont = document.getElementById('teamsContainer');
+    if(teamsCont) teamsCont.style.display = 'none';
 }
 
-/* Player colapsável */
-.perf-player-wrapper {
-    width: 100%;
-    background: #000;
-    border-bottom: 1px solid #333;
-    flex-shrink: 0;
-    /* Altura fixa no desktop, proporcional no mobile */
-    height: 220px;
-    max-height: 35vh; /* nunca ocupa mais de 35% da tela — deixa espaço para a letra */
-}
-
-.perf-player-wrapper iframe {
-    width: 100%;
-    height: 100%;
-    display: block;
-    border: none;
-}
-
-@media (max-width: 600px) {
-    .perf-player-wrapper {
-        /* No mobile: aspect ratio 16:9 proporcional */
-        height: auto;
-        aspect-ratio: 16 / 9;
-        max-height: 40vw;
+function updateFooter() {
+    const footer = document.querySelector('footer');
+    if (footer) {
+        footer.innerHTML = `<p class="footer-dev">Desenvolvido por Jhony Beraldo</p>`;
     }
 }
 
-/* Botão toggle do player */
-.player-toggle-btn {
-    background: #222;
-    border: 1px solid #555;
-    color: #fff;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.2s, color 0.2s;
+// Nav Listeners
+document.getElementById('homeNav').onclick = (e) => { e.preventDefault(); resetView(); };
+document.getElementById('categoriesNav').onclick = (e) => {
+    e.preventDefault();
+    categoryOverlay.style.display = 'block';
+    document.getElementById('hero').style.display = 'none';
+    categoriesContainer.style.display = 'none';
+    searchResultsGrid.style.display = 'none';
+    const teamsCont = document.getElementById('teamsContainer');
+    if(teamsCont) teamsCont.style.display = 'none';
+};
+document.getElementById('newNav').onclick = (e) => {
+    e.preventDefault();
+    const teamsCont = document.getElementById('teamsContainer');
+    if(teamsCont) teamsCont.style.display = 'none';
+    const songs = repertoireData.find(c => c.category === "Novos")?.items || [];
+    renderGrid(songs, "Novos Lançamentos");
+};
+
+// --- Setlist Logic ---
+
+function applyTeamColorToSelector(teamName) {
+    const TS = document.getElementById('teamSelector');
+    if (!TS) return;
+    
+    // Remover classes de cores anteriores
+    TS.classList.remove('team-selected-Start', 'team-selected-Amarelo', 'team-selected-Laranja', 'team-selected-Azul', 'team-selected-Verde', 'team-selected-Branco');
+    
+    // Adiciona classe de cor para o atual, se houver
+    if (teamName) {
+        TS.classList.add('team-selected-' + teamName);
+    }
 }
 
-.player-toggle-btn:hover {
-    background: var(--netflix-red);
-    border-color: var(--netflix-red);
+document.getElementById('teamsNav').onclick = (e) => {
+    e.preventDefault();
+    document.getElementById('hero').style.display = 'none';
+    categoriesContainer.style.display = 'none';
+    searchResultsGrid.style.display = 'none';
+    categoryOverlay.style.display = 'none';
+    document.getElementById('teamsContainer').style.display = 'block';
+    
+    const activeTeam = sessionStorage.getItem(TEAM_KEY);
+    const TS = document.getElementById('teamSelector');
+    if(activeTeam && activeTeam !== 'Master' && !TS.value) {
+        TS.value = activeTeam;
+    }
+    if (!TS.value && TS.options.length > 0) TS.value = TS.options[0].value;
+
+    const currentTeam = TS.value;
+    if(currentTeam) {
+        applyTeamColorToSelector(currentTeam);
+        syncTeamButtons(currentTeam);
+        loadSetlist(currentTeam);
+        document.getElementById('teamSubTabs').style.display = 'flex';
+    }
+};
+
+// Eventos das Sub-Abas de Equipe
+document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+    btn.onclick = (e) => {
+        document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentPerformanceMode = e.target.dataset.mode;
+        
+        // Se a tela de performance estiver aberta, atualize a view em tempo real
+        const screen = document.getElementById('performanceScreen');
+        if (screen && screen.style.display === 'flex') {
+            const keyControlGroup = document.getElementById('keyControlGroup');
+            if (currentPerformanceMode === 'vocal') {
+                screen.classList.add('vocal-mode');
+                if (keyControlGroup) keyControlGroup.style.display = 'none';
+            } else {
+                screen.classList.remove('vocal-mode');
+                if (keyControlGroup) keyControlGroup.style.display = 'flex';
+            }
+            renderPerformanceContent();
+        }
+
+        const TS = document.getElementById('teamSelector');
+        if (TS.value) loadSetlist(TS.value);
+    };
+});
+
+document.getElementById('teamSelector').onchange = (e) => {
+    const teamName = e.target.value;
+    applyTeamColorToSelector(teamName);
+    syncTeamButtons(teamName);
+    loadSetlist(teamName);
+    document.getElementById('teamSubTabs').style.display = 'flex';
+};
+
+async function loadSetlist(teamName) {
+    const grid = document.getElementById('teamSetlistGrid');
+    grid.style.display = 'grid';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Carregando escala...</p>';
+
+    const loggedTeam = sessionStorage.getItem(TEAM_KEY);
+    const auth = sessionStorage.getItem(AUTH_KEY) === 'true';
+    const isAdmin = auth && (loggedTeam === 'Master' || loggedTeam === teamName);
+    const actions = document.getElementById('teamAdminActions');
+    const status = document.getElementById('teamAdminStatus');
+
+    if (isAdmin) {
+        if(actions) actions.style.display = 'flex';
+        if(status) status.style.display = 'block';
+    } else {
+        if(actions) actions.style.display = 'none';
+        if(status) status.style.display = 'none';
+    }
+
+    try {
+        const { data, error } = await _supabase
+            .from('setlists')
+            .select('*')
+            .eq('team', teamName)
+            .order('position', { ascending: true, nullsFirst: false })
+            .order('id', { ascending: true });
+            
+        if(error) throw error;
+
+        grid.innerHTML = '';
+        if(!data || data.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#ccc;">Nenhum louvor escalado para esta equipe.</p>';
+            return;
+        }
+
+        data.forEach((setItem, idx) => {
+            let originalSong = null;
+            for(const cat of repertoireData) {
+                const found = cat.items.find(s => s.title === setItem.song_title);
+                if(found) { originalSong = found; break; }
+            }
+
+            const songForCard = originalSong
+                ? { ...originalSong, obs: setItem.obs }
+                : { title: setItem.song_title, artist: 'Excluída da base', obs: setItem.obs, url: '' };
+
+            const card = createSongCard(songForCard);
+            card.classList.add('setlist-card');
+            card.dataset.setlistId = setItem.id;
+
+            // Número de ordem
+            const posBadge = document.createElement('span');
+            posBadge.className = 'setlist-pos-badge';
+            posBadge.textContent = idx + 1;
+            card.prepend(posBadge);
+
+            if (setItem.obs) {
+                const infoDiv = card.querySelector('.card-info');
+                if (infoDiv) infoDiv.innerHTML += `<p class="setlist-obs">[ ${setItem.obs} ]</p>`;
+            }
+
+            // Clique abre direto a tela de performance no modo já selecionado (Vocal/Músico)
+            // sem passar pelo modal — respeita o que o usuário já escolheu nas sub-abas
+            card.onclick = (e) => {
+                if (e.target.closest('.drag-handle')) return;
+                if (originalSong) openPerformance(originalSong, currentPerformanceMode);
+            };
+
+            // ADM: drag-to-reorder
+            if (isAdmin) {
+                const handle = document.createElement('span');
+                handle.className = 'drag-handle';
+                handle.innerHTML = '<i class="fas fa-grip-lines"></i>';
+                card.prepend(handle);
+                card.setAttribute('draggable', 'true');
+                card.addEventListener('dragstart', _onDragStart);
+                card.addEventListener('dragover',  _onDragOver);
+                card.addEventListener('drop',       _onDrop);
+                card.addEventListener('dragend',    _onDragEnd);
+            }
+
+            grid.appendChild(card);
+        });
+
+        updateTeamBadges();
+    } catch (err) {
+        console.error(err);
+        grid.innerHTML = '<p style="grid-column: 1/-1; color:red; text-align:center;">Erro ao carregar escala.</p>';
+    }
 }
 
-.perf-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 8% 40px;
-    font-family: 'Courier New', Courier, monospace;
-    line-height: 1.8;
-    /* Sem padding-top artificial — o header e player ficam no fluxo flex normal */
+const addToSetlistBtn = document.getElementById('addToSetlistBtn');
+if(addToSetlistBtn) {
+    addToSetlistBtn.onclick = () => {
+        const panel = document.getElementById('setlistEditorPanel');
+        const isVisible = panel.style.display !== 'none';
+        panel.style.display = isVisible ? 'none' : 'block';
+        document.getElementById('urlEditorPanel').style.display = 'none';
+        
+        let obsModal = document.getElementById('modalObs').textContent.replace('Obs: ', '').trim();
+        document.getElementById('setlistObsInput').value = obsModal;
+    };
 }
 
-/* Linha padrão — letra, tamanho Cifra Club */
-.perf-line {
-    white-space: pre-wrap;
-    min-height: 1.5em;
-    font-size: 15px;
-    color: #e8e8e8;
+const cancelSetlistBtn = document.getElementById('cancelSetlistBtn');
+if(cancelSetlistBtn) {
+    cancelSetlistBtn.onclick = () => {
+         document.getElementById('setlistEditorPanel').style.display = 'none';
+    };
 }
 
-/* Vocal: mesma fonte, sem override */
-.performance-screen.vocal-mode .perf-line {
-    font-size: 15px;
-    color: #e8e8e8;
-    text-align: left;
-    padding-left: 0;
+const saveSetlistBtn = document.getElementById('saveSetlistBtn');
+if(saveSetlistBtn) {
+    saveSetlistBtn.onclick = async () => {
+         const songTitle = document.getElementById('modalTitle').textContent;
+         const teamSelect = document.getElementById('setlistTeamSelect');
+         const team = teamSelect ? teamSelect.value : null;
+         const obs = document.getElementById('setlistObsInput').value.trim();
+
+         if(!team) {
+             alert('Selecione uma equipe!');
+             return;
+         }
+
+         const btn = document.getElementById('saveSetlistBtn');
+         btn.textContent = 'Adicionando...';
+
+         try {
+             const { error } = await _supabase.from('setlists').insert([
+                 { team, song_title: songTitle, obs }
+             ]);
+
+             if(error) throw error;
+             
+             alert(`Adicionado com sucesso à escala do ${team}!`);
+             document.getElementById('setlistEditorPanel').style.display = 'none';
+             
+             const teamsCont = document.getElementById('teamsContainer');
+             const TS = document.getElementById('teamSelector');
+             if(teamsCont && teamsCont.style.display !== 'none' && TS && TS.value === team) {
+                  loadSetlist(team);
+             }
+         } catch(err) {
+             alert('Erro ao adicionar à escala: ' + err.message);
+         } finally {
+             btn.innerHTML = '<i class="fas fa-plus"></i> Confirmar na Escala';
+         }
+    };
 }
 
-/* Acordes — amarelo, menor, igual Cifra Club */
-.chord-line {
-    color: #f5c842;
-    font-weight: bold;
-    font-size: 13px;
-    line-height: 1.4;
-}
+const clearSetlistBtn = document.getElementById('clearSetlistBtn');
+if(clearSetlistBtn) {
+    clearSetlistBtn.onclick = async () => {
+        const team = document.getElementById('teamSelector').value;
+        if(!team) return;
 
-/* Marcadores de estrutura [Refrão], [Verso], etc. */
-.structure-marker {
-    color: #e09b2d;
-    font-weight: bold;
-    font-size: 13px;
-    margin-top: 8px;
-}
+        if(!confirm(`⚠️ Tem certeza que deseja LIMPAR TODA A ESCALA do ${team}?`)) return;
 
-/* Variável de tamanho de fonte — controlada via JS */
-#performanceContent {
-    --perf-font-size: 15px;
-}
+        try {
+             const { error } = await _supabase.from('setlists').delete().eq('team', team);
+             if(error) throw error;
 
-#performanceContent .perf-line,
-#performanceContent .vocal-line {
-    font-size: var(--perf-font-size) !important;
-}
-
-#performanceContent .chord-line {
-    font-size: calc(var(--perf-font-size) - 2px) !important;
-}
-
-#performanceContent .structure-marker {
-    font-size: calc(var(--perf-font-size) - 2px) !important;
-}
-
-/* Label do tamanho de fonte */
-.font-size-label {
-    font-size: 0.8rem;
-    color: #fff;
-    min-width: 20px;
-    text-align: center;
-    font-weight: bold;
-}
-
-/* Botão Wake Lock */
-/* Botão AO VIVO nas abas de equipe */
-.team-wake-lock-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: transparent;
-    border: 1px solid #e50914;
-    color: #e50914;
-    padding: 8px 14px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
-    white-space: nowrap;
-}
-
-.team-wake-lock-btn:hover {
-    background: rgba(229,9,20,0.12);
-}
-
-/* Bolinha indicadora */
-.live-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #e50914;
-    display: inline-block;
-    flex-shrink: 0;
-    transition: background 0.2s;
-}
-
-/* Ativo — verde com pulso */
-.team-wake-lock-btn.wake-lock-active {
-    border-color: #2ecc71;
-    color: #2ecc71;
-    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
-    animation: pulse-live 1.5s ease-in-out infinite;
-}
-
-.team-wake-lock-btn.wake-lock-active .live-dot {
-    background: #2ecc71;
-    animation: pulse-dot 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-live {
-    0%, 100% { box-shadow: 0 0 6px rgba(46, 204, 113, 0.3); }
-    50%       { box-shadow: 0 0 16px rgba(46, 204, 113, 0.8); }
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.3; }
-}
-
-/* Controles de rolagem com + e - */
-.scroll-controls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: #222;
-    padding: 4px 10px;
-    border-radius: 4px;
-}
-
-.scroll-controls button {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 0.8rem;
-    cursor: pointer;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 3px;
-    transition: color 0.2s;
-}
-
-.scroll-controls button:hover {
-    color: var(--netflix-red);
-}
-
-#toggleScroll {
-    font-size: 1rem !important;
-    width: 28px !important;
-}
-
-/* Team View Tabs */
-.team-sub-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.sub-tab-btn {
-    background: #222;
-    border: 1px solid #444;
-    color: #888;
-    padding: 10px 25px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s;
-}
-
-.sub-tab-btn.active {
-    background: var(--netflix-red);
-    color: #fff;
-    border-color: var(--netflix-red);
-    box-shadow: 0 0 10px rgba(229,9,20,0.5);
-}
-
-/* ─── Praise Mode Mobile ─── */
-@media (max-width: 600px) {
-    .perf-header { flex-wrap: wrap; gap: 10px; padding: 10px; }
-    .perf-controls { width: 100%; justify-content: center; font-size: 0.8rem; }
-    .perf-content { padding: 15px 5% 40px; }
+             alert(`A escala do ${team} foi limpa!`);
+             loadSetlist(team);
+        } catch(err) {
+             alert('Erro ao limpar a escala: ' + err.message);
+        }
+    };
 }
 
 
+// Modal Close logic
+closeModal.onclick = () => {
+    modal.style.display = 'none';
+    videoIframe.src = '';
+};
 
-/* ── Badge sem cifra no card ────────────────────────────── */
-.song-card { position: relative; }
+window.onclick = (event) => {
+    if (event.target == modal) closeModal.onclick();
+    if (event.target == categoryOverlay) { categoryOverlay.style.display = 'none'; resetView(); }
+    if (event.target == addSongModal) addSongModal.style.display = 'none';
+};
 
-.no-lyrics-badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: rgba(229,9,20,0.85);
-    color: #fff;
-    font-size: 0.7rem;
-    padding: 3px 6px;
-    border-radius: 4px;
-    z-index: 2;
-    pointer-events: none;
+window.onscroll = () => {
+    if (window.scrollY > 50) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+};
+
+// Start
+// --- Sincronização Automática e Real-time ---
+
+// 1. Atualizar ao voltar para o app — só se passou mais de 3 min (evita lentidão)
+let _lastFetchTime = 0;
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        if (now - _lastFetchTime > 180000) {
+            _lastFetchTime = now;
+            fetchData();
+        }
+        const teamsCont = document.getElementById('teamsContainer');
+        const TS = document.getElementById('teamSelector');
+        if (teamsCont && teamsCont.style.display !== 'none' && TS && TS.value) {
+            loadSetlist(TS.value);
+        }
+    }
+});
+
+// 2. Atualizar a cada 2 minutos (Polling)
+setInterval(() => {
+    console.log("Executando atualização periódica (2 min)...");
+    fetchData();
+    
+    // Se estiver na aba de equipes, recarrega a escala também
+    const teamsCont = document.getElementById('teamsContainer');
+    const TS = document.getElementById('teamSelector');
+    if (teamsCont && teamsCont.style.display !== 'none' && TS && TS.value) {
+        loadSetlist(TS.value);
+    }
+}, 120000); // 120.000ms = 2 minutos
+
+// 3. Supabase Real-time (Inscrição em mudanças no Banco)
+const songsChannel = _supabase
+    .channel('db-changes')
+    .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'songs' },
+        (payload) => {
+            console.log('Mudança detectada na tabela songs:', payload);
+            fetchData();
+        }
+    )
+    .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'setlists' },
+        (payload) => {
+            console.log('Mudança detectada na tabela setlists:', payload);
+            const teamsCont = document.getElementById('teamsContainer');
+            const TS = document.getElementById('teamSelector');
+            if (teamsCont && teamsCont.style.display !== 'none' && TS && TS.value === payload.new.team) {
+                loadSetlist(TS.value);
+            }
+        }
+    )
+    .subscribe();
+
+// Botão de Atualização Forçada (Manual) - Útil para Standalone/App
+document.getElementById('forceRefreshBtn').addEventListener('click', () => {
+    const btn = document.getElementById('forceRefreshBtn');
+    btn.classList.add('spinning');
+    
+    // Pequeno delay para mostrar a animação antes de recarregar
+    setTimeout(() => {
+        window.location.reload(true);
+    }, 500);
+});
+
+// Função para o vídeo do Banner Principal (Hero)
+window.openHeroVideo = function() {
+    // Abre a primeira música da lista como destaque ou um vídeo padrão
+    if (repertoireData.length > 0 && repertoireData[0].items.length > 0) {
+        openVideo(repertoireData[0].items[0]);
+    } else {
+        alert("Nenhum vídeo disponível no momento.");
+    }
+};
+
+// Inicialização segura
+// ── syncTeamButtons ──────────────────────────────────────────────────
+function syncTeamButtons(teamName) {
+    document.querySelectorAll('.team-btn').forEach(btn => {
+        btn.classList.toggle('team-btn-active', btn.dataset.team === teamName);
+    });
 }
 
-/* ── Abas Vocal/Músico no modal da página inicial ───────── */
-.modal-perf-tabs {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-    flex-wrap: wrap;
+// ── Team Buttons visuais ──────────────────────────────────────────────
+document.getElementById('teamBtnGrid').addEventListener('click', (e) => {
+    const btn = e.target.closest('.team-btn');
+    if (!btn) return;
+    const teamName = btn.dataset.team;
+    const TS = document.getElementById('teamSelector');
+    if (!TS.querySelector(`option[value="${teamName}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = teamName; opt.textContent = teamName;
+        TS.appendChild(opt);
+    }
+    TS.value = teamName;
+    syncTeamButtons(teamName);
+    applyTeamColorToSelector(teamName);
+    loadSetlist(teamName);
+    document.getElementById('teamSubTabs').style.display = 'flex';
+});
+
+// ── Wake Lock ─────────────────────────────────────────────────────────
+let _wakeLock = null;
+async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+        _wakeLock = await navigator.wakeLock.request('screen');
+        _wakeLock.addEventListener('release', () => { _wakeLock = null; _updateWakeLockUI(); });
+        _updateWakeLockUI();
+    } catch(e) {}
+}
+async function releaseWakeLock() {
+    if (_wakeLock) { await _wakeLock.release(); _wakeLock = null; }
+    _updateWakeLockUI();
+}
+function _updateWakeLockUI() {
+    const active = !!_wakeLock;
+    ['teamWakeLockBtn','modalLiveBtn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('wake-lock-active', active);
+    });
+}
+document.getElementById('teamWakeLockBtn').addEventListener('click', () => {
+    _wakeLock ? releaseWakeLock() : requestWakeLock();
+});
+document.addEventListener('visibilitychange', () => {
+    if (_wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
+});
+
+// ── Drag-to-Reorder ───────────────────────────────────────────────────
+let _dragSrc = null;
+function _onDragStart(e) { _dragSrc = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function _onDragOver(e) { e.preventDefault(); document.querySelectorAll('.setlist-card').forEach(c => c.classList.remove('drag-over')); this.classList.add('drag-over'); }
+function _onDrop(e) {
+    e.preventDefault();
+    if (_dragSrc && _dragSrc !== this) {
+        const cards = [...document.querySelectorAll('#teamSetlistGrid .setlist-card')];
+        const si = cards.indexOf(_dragSrc), di = cards.indexOf(this);
+        const grid = document.getElementById('teamSetlistGrid');
+        if (si < di) grid.insertBefore(_dragSrc, this.nextSibling);
+        else grid.insertBefore(_dragSrc, this);
+        _saveSetlistOrder();
+    }
+}
+function _onDragEnd() { document.querySelectorAll('.setlist-card').forEach(c => c.classList.remove('dragging','drag-over')); _dragSrc = null; }
+async function _saveSetlistOrder() {
+    const cards = [...document.querySelectorAll('#teamSetlistGrid .setlist-card')];
+    cards.forEach((c, i) => { const b = c.querySelector('.setlist-pos-badge'); if(b) b.textContent = i+1; });
+    for (const [i, c] of cards.entries()) {
+        await _supabase.from('setlists').update({ position: i + 1 }).eq('id', parseInt(c.dataset.setlistId));
+    }
 }
 
-.modal-perf-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #222;
-    border: 1px solid #444;
-    color: #888;
-    padding: 9px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+// ── Badge de contagem nos botões de equipe ────────────────────────────
+async function updateTeamBadges() {
+    const teams = ['Start','Amarelo','Laranja','Azul','Verde','Branco'];
+    for (const team of teams) {
+        try {
+            const { data } = await _supabase.from('setlists').select('id').eq('team', team);
+            const count = (data || []).length;
+            const btn = document.querySelector(`.team-btn[data-team="${team}"]`);
+            if (!btn) continue;
+            let badge = btn.querySelector('.team-count-badge');
+            if (count > 0) {
+                if (!badge) { badge = document.createElement('span'); badge.className = 'team-count-badge'; btn.appendChild(badge); }
+                badge.textContent = count;
+            } else if (badge) { badge.remove(); }
+        } catch(_) {}
+    }
 }
 
-.modal-perf-btn.active {
-    background: var(--netflix-red);
-    border-color: var(--netflix-red);
-    color: #fff;
+// ── Controles de Fonte ────────────────────────────────────────────────
+function applyFontSize(size) {
+    currentFontSize = Math.max(10, Math.min(28, size));
+    const c = document.getElementById('performanceContent');
+    // O CSS usa var(--perf-font-size) !important nas .perf-line,
+    // então precisamos setar a CSS variable, não o font-size do container
+    if (c) c.style.setProperty('--perf-font-size', currentFontSize + 'px');
+    const lbl = document.getElementById('fontSizeLabel');
+    if (lbl) lbl.textContent = currentFontSize;
 }
+document.getElementById('fontIncrease').addEventListener('click', () => applyFontSize(currentFontSize + 1));
+document.getElementById('fontDecrease').addEventListener('click', () => applyFontSize(currentFontSize - 1));
 
-.modal-perf-btn.live-btn {
-    border-color: #e50914;
-    color: #e50914;
-}
+window.addEventListener('DOMContentLoaded', () => {
+    _lastFetchTime = Date.now();
+    fetchData();
+    setTimeout(updateTeamBadges, 1500);
 
-.modal-perf-btn.live-btn.wake-lock-active {
-    border-color: #2ecc71;
-    color: #2ecc71;
-    animation: pulse-live 1.5s ease-in-out infinite;
-}
+    // ── Capotraste popup ──────────────────────────────────────────────
+    const capoDisplay = document.getElementById('perfCapoDisplay');
+    const capoGrid = document.getElementById('capoSelectorGrid');
 
-/* ── Contador nos botões de equipe ──────────────────────── */
-.team-btn { position: relative; }
+    if (capoDisplay && capoGrid) {
+        capoDisplay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            capoGrid.style.display = capoGrid.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('keySelectorGrid').style.display = 'none';
+        });
 
-.team-count {
-    display: inline-block;
-    margin-left: 5px;
-    font-size: 0.75rem;
-    opacity: 0.8;
-    font-weight: 400;
-}
+        capoGrid.querySelectorAll('.capo-btn-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const casa = parseInt(btn.dataset.capo);
+                capoDisplay.textContent = casa === 0 ? 'Sem capo' : `${casa}ª casa`;
+                capoDisplay.dataset.capo = casa;
+                capoGrid.querySelectorAll('.capo-btn-item').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                capoGrid.style.display = 'none';
+                // Capotraste é info visual para o músico — não transpõe automaticamente
+            });
+        });
+    }
 
-.team-btn-active .team-count {
-    opacity: 1;
-    font-weight: 700;
-}
+    document.addEventListener('click', (e) => {
+        if (capoGrid && !capoGrid.contains(e.target) && e.target !== capoDisplay) {
+            capoGrid.style.display = 'none';
+        }
+    });
+    // ─────────────────────────────────────────────────────────────────
 
-/* ── Setas de reordenação na escala ─────────────────────── */
-.reorder-btns {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    z-index: 3;
-}
+    // Botão AO VIVO no modal
+    const modalLiveBtn = document.getElementById('modalLiveBtn');
+    if (modalLiveBtn) modalLiveBtn.addEventListener('click', () => { _wakeLock ? releaseWakeLock() : requestWakeLock(); });
 
-.reorder-btn {
-    background: rgba(0,0,0,0.7);
-    border: none;
-    color: #fff;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
+    // Botão Ver Letra / Cifra no modal
+    const modalOpenPerfBtn = document.getElementById('modalOpenPerfBtn');
+    if (modalOpenPerfBtn) {
+        modalOpenPerfBtn.onclick = () => {
+            if (!window._modalCurrentSong) return;
+            const activeBtn = document.querySelector('.modal-perf-btn[data-mode].active');
+            const mode = activeBtn ? activeBtn.dataset.mode : 'vocal';
+            const currentSrc = videoIframe.src;
+            modal.style.display = 'none';
+            videoIframe.src = '';
+            openPerformance(window._modalCurrentSong, mode);
+            // Transfere player para tela de performance
+            if (currentSrc && currentSrc !== 'about:blank' && currentSrc !== '') {
+                const perfIframe = document.getElementById('perfPlayerIframe');
+                const perfWrapper = document.getElementById('perfPlayerWrapper');
+                const perfToggleBtn = document.getElementById('perfPlayerToggle');
+                if (perfIframe) perfIframe.src = currentSrc;
+                if (perfWrapper) perfWrapper.style.display = 'none';
+                if (perfToggleBtn) {
+                    perfToggleBtn.style.display = 'flex';
+                    perfToggleBtn.title = 'Mostrar player';
+                    perfToggleBtn.innerHTML = '<i class="fas fa-music"></i>';
+                    perfToggleBtn.onclick = () => {
+                        const vis = perfWrapper.style.display !== 'none';
+                        perfWrapper.style.display = vis ? 'none' : 'block';
+                        perfToggleBtn.title = vis ? 'Mostrar player' : 'Ocultar player';
+                        perfToggleBtn.innerHTML = vis ? '<i class="fas fa-music"></i>' : '<i class="fas fa-eye-slash"></i>';
+                    };
+                }
+            }
+        };
+    }
 
-.reorder-btn:hover { background: var(--netflix-red); }
-
-/* ── Garantir position relative no setlist-card ────────── */
-.setlist-card { position: relative; }
+    // Abas Vocal/Músico no modal
+    document.querySelectorAll('.modal-perf-btn[data-mode]').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.modal-perf-btn[data-mode]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+    });
+});
