@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REPERTÓRIO IBB | Netflix Style</title>
+    <!-- PWA & Mobile Optimization -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Repertório IBB">
+    <link rel="apple-touch-icon" href="hero_banner.png">
+    <meta name="theme-color" content="#141414">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css?v=20">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header id="header">
+        <div class="logo">REPERTÓRIO IBB</div>
+        <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
+        <nav id="navbar">
+            <ul>
+                <li><a href="#" id="homeNav" class="active">Página Inicial</a></li>
+                <li><a href="#" id="categoriesNav">Categorias</a></li>
+                <li><a href="#" id="newNav">Novos</a></li>
+                <li><a href="#" id="teamsNav">Equipes</a></li>
+                <li id="addSongNavItem" style="display:none;"><button id="addSongBtn" class="add-btn-main"><i class="fas fa-plus"></i> Adicionar</button></li>
+                <li><button id="admBtn" class="adm-btn"><i class="fas fa-lock"></i> ADM</button></li>
+            </ul>
+        </nav>
+        <div class="search-container">
+            <button id="forceRefreshBtn" title="Sincronizar e Atualizar">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <input type="text" id="searchInput" placeholder="Músicas ou artistas...">
+            <i class="fas fa-search"></i>
+        </div>
+    </header>
+
+    <main>
+        <!-- Category Filter Overlay -->
+        <div id="categoryOverlay" class="category-overlay">
+            <div id="categoryList" class="category-list"></div>
+        </div>
+
+        <!-- Add Song Modal -->
+        <div id="addSongModal" class="modal">
+            <div class="modal-content">
+                <span class="close-add-modal">&times;</span>
+                <div class="modal-info">
+                    <h2>Adicionar Novo Louvor</h2>
+                    <p>Preencha os dados abaixo para cadastrar na base local.</p>
+                    <form id="addSongForm" class="add-song-form">
+                        <input type="text" id="addTitle" placeholder="Nome do Louvor" required>
+                        <input type="text" id="addArtist" placeholder="Artista/Ministério" required>
+                        <input type="text" id="addObs" placeholder="Observações (ex: Tom E, 2x refrão)">
+                        <input type="url" id="addUrl" placeholder="URL do YouTube (Livre para busca se vazio)">
+                        <div class="cifraclub-input-group">
+                            <input type="url" id="addCifraClubUrl" style="flex: 1;" placeholder="URL do Cifra Club (Opcional)">
+                            <button type="button" id="btnCapturarCifra" class="capture-btn">Capturar Letra/Cifra</button>
+                        </div>
+                        
+                        <div class="category-selection">
+                            <label>Selecione as Categorias:</label>
+                            <div id="categoryCheckboxes" class="checkbox-grid">
+                                <!-- Categorias injetadas aqui -->
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="save-btn-large">Salvar Louvor</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Senha (Portão de Liderança) -->
+        <div id="passwordGateModal" class="modal">
+            <div class="modal-content password-gate-content">
+                <span class="close-password-modal">&times;</span>
+                <div class="password-gate-body">
+                    <div class="password-gate-icon"><i class="fas fa-lock"></i></div>
+                    <h2>Área Restrita</h2>
+                    <p>Esta função é exclusiva para líderes do IBB.<br>Digite a senha para continuar.</p>
+                    <div class="password-input-wrap">
+                        <input type="text" style="-webkit-text-security: disc; text-security: disc;" id="leaderPasswordInput" placeholder="Senha de liderança..." autocomplete="off">
+                        <button id="submitPasswordBtn"><i class="fas fa-unlock-alt"></i> Entrar</button>
+                    </div>
+                    <p id="passwordError" class="password-error" style="display:none;">Senha incorreta. Tente novamente.</p>
+                </div>
+            </div>
+        </div>
+
+        <section class="hero" id="hero">
+            <div class="hero-content">
+                <h1 id="heroTitle">Repertório IBB</h1>
+                <p id="heroInfo">Louvor e Adoração • 2024</p>
+                <div class="buttons">
+                    <button class="play-btn" onclick="openHeroVideo()"><i class="fas fa-play"></i> Assistir</button>
+                    <button class="info-btn"><i class="fas fa-info-circle"></i> Mais Informações</button>
+                </div>
+            </div>
+            <div class="hero-overlay"></div>
+        </section>
+
+        <!-- Painel de Equipes -->
+        <div id="teamsContainer" style="display:none;" class="teams-container">
+            <div class="teams-header">
+                <h2 id="teamsTitle"><i class="fas fa-users"></i> Escalas por Equipe</h2>
+                <!-- Seletor visual de equipes — substitui o <select> nativo -->
+                <div class="team-btn-grid" id="teamBtnGrid">
+                    <button class="team-btn" data-team="Start">Start</button>
+                    <button class="team-btn" data-team="Amarelo">Amarelo</button>
+                    <button class="team-btn" data-team="Laranja">Laranja</button>
+                    <button class="team-btn" data-team="Azul">Azul</button>
+                    <button class="team-btn" data-team="Verde">Verde</button>
+                    <button class="team-btn" data-team="Branco">Branco</button>
+                </div>
+                <!-- select oculto mantido para compatibilidade com o JS existente -->
+                <select id="teamSelector" class="team-selector" style="display:none;"></select>
+                <p id="teamAdminStatus" style="display:none; color:#2ecc71; font-size:12px; margin-top:5px;"><i class="fas fa-unlock"></i> Modo Edição Ativo</p>
+                
+                <!-- Sub-abas Vocal/Músicos -->
+                <div class="team-sub-tabs" id="teamSubTabs" style="display:none; margin-top: 20px;">
+                    <button class="sub-tab-btn active" data-mode="vocal"><i class="fas fa-microphone"></i> Vocal</button>
+                    <button class="sub-tab-btn" data-mode="musician"><i class="fas fa-guitar"></i> Músicos</button>
+                    <button id="teamWakeLockBtn" class="team-wake-lock-btn" title="Manter tela acesa durante a escala">
+                        <span class="live-dot"></span> AO VIVO
+                    </button>
+                </div>
+
+                <div class="team-actions" style="display:none;" id="teamAdminActions">
+                    <button id="clearSetlistBtn" class="delete-song-btn" style="margin-top:15px; padding: 10px 15px;"><i class="fas fa-trash-alt"></i> Limpar Esta Escala</button>
+                </div>
+            </div>
+            
+            <div id="teamSetlistGrid" class="search-results-grid"></div>
+        </div>
+
+        <!-- Search Results Grid -->
+        <div id="searchResults" class="search-results-grid"></div>
+
+        <div id="categoriesContainer">
+            <!-- As categorias serão injetadas aqui via JS -->
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 IBB Louvor - Desenvolvido por <span class="developer-name">Jhony Berado</span></p>
+    </footer>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="video-wrapper">
+                <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="modal-info">
+                <h2 id="modalTitle"></h2>
+                <p id="modalArtist"></p>
+                <p id="modalObs" style="color: #bbb; font-style: italic; font-size: 0.9rem; margin-top: 5px;"></p>
+                <div class="modal-actions">
+                    <button id="addToSetlistBtn" title="Adicionar à Escala" style="display:none;"><i class="fas fa-list-ul"></i> Escalar</button>
+                    <button id="editUrlBtn" title="Editar URL do vídeo" style="display:none;"><i class="fas fa-edit"></i> Editar Versão</button>
+                </div>
+                <!-- Abas Vocal/Músico + botão Ver Letra no modal da página inicial -->
+                <div id="modalPerfTabs" class="modal-perf-tabs" style="display:none;">
+                    <button class="modal-perf-btn active" data-mode="vocal"><i class="fas fa-microphone"></i> Vocal</button>
+                    <button class="modal-perf-btn" data-mode="musician"><i class="fas fa-guitar"></i> Músicos</button>
+                    <button id="modalLiveBtn" class="modal-perf-btn live-btn"><span class="live-dot"></span> AO VIVO</button>
+                </div>
+                <button id="modalOpenPerfBtn" class="save-url-btn" style="margin-top:10px; width:100%; display:none;">
+                    <i class="fas fa-book-open"></i> Ver Letra / Cifra
+                </button>
+                
+                <!-- Painel de Adição à Escala -->
+                <div id="setlistEditorPanel" class="url-editor-panel" style="display:none;">
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-list-ul"></i> Adicionar à Escala da Equipe</p>
+                        <select id="setlistTeamSelect" class="team-selector" style="margin-bottom: 10px;">
+                            <!-- Opções populadas no Javascript dependendo da senha -->
+                        </select>
+                        <input type="text" id="setlistObsInput" placeholder="Observação opcional..." />
+
+                        <!-- Tom e Capo para a escala -->
+                        <div style="display:flex; gap:8px; margin-top:8px; align-items:center; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:120px;">
+                                <label style="font-size:0.7rem; color:#aaa; display:block; margin-bottom:4px;"><i class="fas fa-music"></i> Tom para esta equipe</label>
+                                <select id="setlistTomSelect" class="team-selector" style="margin-bottom:0;">
+                                    <!-- Populado via JS ao abrir -->
+                                </select>
+                            </div>
+                            <div style="flex:1; min-width:120px;">
+                                <label style="font-size:0.7rem; color:#aaa; display:block; margin-bottom:4px;"><i class="fas fa-guitar"></i> Capo para esta equipe</label>
+                                <select id="setlistCapoSelect" class="team-selector" style="margin-bottom:0;">
+                                    <option value="0">S/Capo</option>
+                                    <option value="1">1ª casa</option>
+                                    <option value="2">2ª casa</option>
+                                    <option value="3">3ª casa</option>
+                                    <option value="4">4ª casa</option>
+                                    <option value="5">5ª casa</option>
+                                    <option value="6">6ª casa</option>
+                                    <option value="7">7ª casa</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="url-editor-actions" style="margin-top:10px;">
+                            <button id="saveSetlistBtn" class="save-url-btn"><i class="fas fa-plus"></i> Confirmar na Escala</button>
+                            <button id="cancelSetlistBtn" class="cancel-url-btn"><i class="fas fa-times"></i> Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Gerenciamento ADM -->
+                <div id="urlEditorPanel" class="url-editor-panel" style="display:none;">
+                    
+                    <!-- Aba 0: Editar Nome do Louvor -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-music"></i> Editar Nome do Louvor</p>
+                        <input type="text" id="newTitleInput" placeholder="Nome do louvor..." />
+                        <div class="url-editor-actions">
+                            <button id="saveTitleBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Nome</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1: Editar URL -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-link"></i> Editar Vídeo (URL)</p>
+                        <input type="url" id="newUrlInput" placeholder="https://www.youtube.com/watch?v=..." />
+                        <div class="url-editor-actions">
+                            <button id="saveUrlBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar URL</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1b: Editar Artista -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-microphone"></i> Editar Nome do Artista</p>
+                        <input type="text" id="newArtistInput" placeholder="Nome do artista ou ministério..." />
+                        <div class="url-editor-actions">
+                            <button id="saveArtistBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Artista</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 1c: Editar Observações -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-sticky-note"></i> Editar Observações</p>
+                        <input type="text" id="newObsInput" placeholder="Observações e Tom (ex: Tom D, toca 2x)..." />
+                        <div class="url-editor-actions">
+                            <button id="saveObsBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Obs</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 2: Editar Letra e Cifra -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-file-alt"></i> Editar Letra e Cifra</p>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: #888;">Link do Cifra Club:</label>
+                            <div class="cifraclub-input-group">
+                                <input type="text" id="editCifraClubUrl" placeholder="Cole o link aqui..." style="flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;" />
+                                <button type="button" id="btnCapturarCifraEdit" class="capture-btn" style="padding: 8px 12px;">Capturar</button>
+                            </div>
+                        </div>
+
+                        <textarea id="editCifraText" placeholder="A letra e cifra aparecerão aqui..." style="width:100%; height:250px; background:#222; color:#fff; border:1px solid #444; padding:10px; font-family:monospace; font-size:14px; border-radius:5px; resize:vertical;"></textarea>
+                        
+                        <div class="url-editor-actions" style="margin-top:10px;">
+                            <button id="saveCifraBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Letra/Cifra</button>
+                        </div>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 3: Editar Categorias -->
+                    <div class="editor-section">
+                        <p class="editor-section-title"><i class="fas fa-tags"></i> Editar Categorias</p>
+                        <div id="editCategoryCheckboxes" class="edit-checkbox-grid"></div>
+                        <button id="saveCategoriesBtn" class="save-url-btn" style="margin-top:12px;"><i class="fas fa-save"></i> Salvar Categorias</button>
+                    </div>
+
+                    <hr class="editor-divider">
+
+                    <!-- Aba 3: Excluir -->
+                    <div class="editor-section delete-section">
+                        <p class="editor-section-title danger"><i class="fas fa-trash-alt"></i> Zona de Perigo</p>
+                        <div id="deleteConfirmStep" style="display:none;" class="delete-confirm-box">
+                            <p>Tem certeza? Esta ação <strong>não pode ser desfeita</strong>.</p>
+                            <div class="url-editor-actions">
+                                <button id="confirmDeleteBtn" class="delete-final-btn"><i class="fas fa-trash-alt"></i> Sim, Excluir</button>
+                                <button id="cancelDeleteBtn" class="cancel-url-btn"><i class="fas fa-times"></i> Cancelar</button>
+                            </div>
+                        </div>
+                        <button id="deleteSongBtn" class="delete-song-btn"><i class="fas fa-trash-alt"></i> Excluir este Louvor</button>
+                    </div>
+
+                    <div class="url-editor-actions" style="margin-top:16px;">
+                        <button id="cancelUrlBtn" class="cancel-url-btn" style="width:100%;justify-content:center;"><i class="fas fa-times"></i> Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA DE PERFORMANCE (NOVO) -->
+    <div id="performanceScreen" class="performance-screen" style="display:none;">
+        <header class="perf-header">
+            <!-- Navegação: Anterior + Próximo -->
+            <div class="perf-nav-group">
+                <button id="prevPerfBtn" class="perf-nav-btn" style="display:none;" title="Música anterior">
+                    <i class="fas fa-chevron-left"></i> Ant.
+                </button>
+                <button id="nextPerfBtn" class="perf-nav-btn" style="display:none;" title="Próxima música">
+                    Próx. <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <!-- Título central -->
+            <div class="perf-title-group">
+                <h1 id="perfTitle">Título da Música</h1>
+                <p id="perfArtist">Artista</p>
+            </div>
+            <!-- X fechar -->
+            <button id="closePerfBtn" class="perf-close-btn" title="Fechar">
+                <i class="fas fa-times"></i>
+            </button>
+            <!-- Botões ADM dentro da performance (só para admin) -->
+            <div id="perfAdminActions" class="perf-admin-actions" style="display:none;">
+                <button id="perfAddToSetlistBtn" class="perf-admin-btn">
+                    <i class="fas fa-list-ul"></i> Escalar
+                </button>
+                <button id="perfEditBtn" class="perf-admin-btn">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+            </div>
+            <!-- Botões de modo: Vocal / Músicos / Ao Vivo -->
+            <div class="perf-mode-tabs">
+                <button class="perf-mode-btn active" data-mode="vocal">
+                    <i class="fas fa-microphone"></i> Vocal
+                </button>
+                <button class="perf-mode-btn" data-mode="musician">
+                    <i class="fas fa-guitar"></i> Músicos
+                </button>
+                <button id="perfWakeLockBtn" class="perf-mode-btn perf-wakelock-btn">
+                    <span class="live-dot"></span> AO VIVO
+                </button>
+            </div>
+            <!-- Controles -->
+            <div class="perf-controls">
+                <div class="control-group">
+                    <span class="control-label">Player</span>
+                    <button id="perfPlayerToggle" class="player-toggle-btn" style="display:none;" title="Mostrar player">
+                        <i class="fas fa-music"></i>
+                    </button>
+                </div>
+                <div class="control-group" id="keyControlGroup">
+                    <span class="control-label">Tom</span>
+                    <div class="transpose-btns">
+                        <button id="perfKeyDisplay" class="key-selector-trigger">Original</button>
+                    </div>
+                    <small id="perfTomSubLabel" class="perf-tom-sub" style="display:none;"></small>
+                </div>
+                <!-- Capotraste -->
+                <div class="control-group capo-control-group" id="capoControlGroup" style="display:none;">
+                    <span class="control-label">Capo</span>
+                    <button id="perfCapoDisplay" class="capo-badge-btn" title="Alterar capotraste">
+                        <span id="perfCapoText">3ª casa</span>
+                    </button>
+                </div>
+                <!-- Popup de Capotraste -->
+                <div id="capoSelectorGrid" class="key-grid-popup capo-popup" style="display:none;">
+                    <div class="key-grid-header" style="justify-content:center; margin-bottom:10px;">
+                        <span style="color:#aaa; font-size:0.8rem;">Capotraste — Casa</span>
+                    </div>
+                    <div class="capo-grid-items">
+                        <button class="capo-btn-item" data-capo="0">Sem capo</button>
+                        <button class="capo-btn-item" data-capo="1">1ª</button>
+                        <button class="capo-btn-item" data-capo="2">2ª</button>
+                        <button class="capo-btn-item" data-capo="3">3ª</button>
+                        <button class="capo-btn-item" data-capo="4">4ª</button>
+                        <button class="capo-btn-item" data-capo="5">5ª</button>
+                        <button class="capo-btn-item" data-capo="6">6ª</button>
+                        <button class="capo-btn-item" data-capo="7">7ª</button>
+                        <button class="capo-btn-item" data-capo="8">8ª</button>
+                        <button class="capo-btn-item" data-capo="9">9ª</button>
+                        <button class="capo-btn-item" data-capo="10">10ª</button>
+                        <button class="capo-btn-item" data-capo="11">11ª</button>
+                        <button class="capo-btn-item" data-capo="12">12ª</button>
+                    </div>
+                </div>
+                <!-- Grade de Tons (Oculta por padrão) -->
+                <div id="keySelectorGrid" class="key-grid-popup" style="display:none;">
+                    <div class="key-grid-header">
+                        <button class="half-step-btn" id="stepDown">- ½ tom</button>
+                        <button class="half-step-btn" id="stepUp">+ ½ tom</button>
+                    </div>
+                    <div class="key-grid-items">
+                        <button class="key-btn" data-key="A">A</button>
+                        <button class="key-btn" data-key="Bb">Bb</button>
+                        <button class="key-btn" data-key="B">B</button>
+                        <button class="key-btn" data-key="C">C</button>
+                        <button class="key-btn" data-key="Db">Db</button>
+                        <button class="key-btn" data-key="D">D</button>
+                        <button class="key-btn" data-key="Eb">Eb</button>
+                        <button class="key-btn" data-key="E">E</button>
+                        <button class="key-btn" data-key="F">F</button>
+                        <button class="key-btn" data-key="F#">F#</button>
+                        <button class="key-btn" data-key="G">G</button>
+                        <button class="key-btn" data-key="Ab">Ab</button>
+                    </div>
+                    <button class="restore-key-btn" id="restoreKey">Restaurar tom inicial</button>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Fonte</span>
+                    <div class="scroll-controls">
+                        <button id="fontDecrease" title="Diminuir fonte"><i class="fas fa-minus"></i></button>
+                        <span id="fontSizeLabel" class="font-size-label">15</span>
+                        <button id="fontIncrease" title="Aumentar fonte"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div class="perf-controls-separator"></div>
+                <div class="control-group">
+                    <span class="control-label">Rolagem</span>
+                    <div class="scroll-controls">
+                        <button id="scrollSlower" title="Mais lento"><i class="fas fa-minus"></i></button>
+                        <button id="toggleScroll"><i class="fas fa-play"></i></button>
+                        <button id="scrollFaster" title="Mais rápido"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Player YouTube colapsável -->
+        <div id="perfPlayerWrapper" class="perf-player-wrapper" style="display:none;">
+            <iframe id="perfPlayerIframe"
+                src=""
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+
+        <div id="performanceContent" class="perf-content">
+            <!-- Letra e Cifra renderizadas aqui -->
+        </div>
+    </div>
+
+    <script src="script.js?v=PRO_DEFINITIVO_V19"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>
