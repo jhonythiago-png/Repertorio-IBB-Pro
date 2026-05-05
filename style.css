@@ -1,0 +1,2465 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --netflix-red: #E50914;
+    --netflix-black: #141414;
+    --text-color: #FFFFFF;
+    --gray: #808080;
+}
+
+body {
+    background-color: var(--netflix-black);
+    color: var(--text-color);
+    font-family: 'Roboto', sans-serif;
+    overflow-x: hidden;
+    width: 100vw;
+}
+
+/* Header */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 4%;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+    transition: background 0.3s ease;
+}
+
+header.scrolled {
+    background-color: #000;
+}
+
+.logo {
+    color: var(--netflix-red);
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+.menu-toggle {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #fff;
+    order: 2;
+}
+
+nav {
+    flex-grow: 1;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    margin-left: 20px;
+    align-items: center;
+}
+
+nav ul li {
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+
+nav ul li a:hover, nav ul li a.active {
+    color: #fff;
+    font-weight: bold;
+}
+
+.add-btn-main {
+    background: var(--netflix-red);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+    font-size: 0.85rem;
+}
+
+.add-btn-main:hover {
+    background: #b20710;
+}
+
+.adm-btn {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #555;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    font-size: 0.85rem;
+}
+
+.adm-btn:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+.adm-btn.active {
+    background: rgba(229,9,20,0.15);
+    border-color: var(--netflix-red);
+    color: var(--netflix-red);
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.75);
+    border: 1px solid rgba(255,255,255,0.6);
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.search-container i {
+    margin-left: 10px;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.search-container input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    outline: none;
+    width: 180px;
+    font-size: 0.9rem;
+}
+
+/* Hero Section */
+.hero {
+    height: 38vh;
+    width: 100%;
+    background-image: url('hero_banner.png');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 4%;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Espaço entre o banner e o primeiro título de categoria */
+#categoriesContainer {
+    padding-top: 24px;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,.8) 0, rgba(0,0,0,0) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    display: none !important;
+}
+
+/* Espaço entre o banner e o primeiro título de categoria */
+#categoriesContainer {
+    margin-top: -60px;
+    position: relative;
+    z-index: 2;
+    padding-top: 0;
+}
+
+/* Category Overlay */
+.category-overlay {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 60px);
+    background: rgba(20, 20, 20, 0.98);
+    z-index: 900;
+    padding: 40px 4%;
+    overflow-y: auto;
+}
+
+.category-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.category-item {
+    background: rgba(255,255,255,0.05);
+    padding: 15px 10px;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    font-weight: bold;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    font-size: 0.9rem;
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+.category-item:hover {
+    background: var(--netflix-red);
+    transform: translateY(-5px);
+}
+
+/* Repertoire Rows */
+#categoriesContainer {
+    padding: 20px 4%;
+    margin-top: -60px;
+    position: relative;
+    z-index: 10;
+}
+
+.category-row {
+    margin-bottom: 40px;
+}
+
+.category-row h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.row-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.row-container {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 20px 0;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    width: 100%;
+}
+
+.nav-btn {
+    position: absolute;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border: none;
+    height: 80%;
+    width: 45px;
+    z-index: 50;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s, background 0.3s;
+    border-radius: 4px;
+}
+
+.row-wrapper:hover .nav-btn {
+    opacity: 1;
+}
+
+.nav-btn:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+.prev-btn { left: 0; }
+.next-btn { right: 0; }
+
+.row-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* Song Cards */
+.song-card {
+    min-width: 250px;
+    max-width: 250px;
+    height: 140px;
+    margin-right: 10px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.song-card:hover {
+    transform: scale(1.1);
+    z-index: 100;
+}
+
+.song-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.song-card:hover .card-info {
+    opacity: 1;
+}
+
+.card-info h4 {
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.card-info p {
+    font-size: 0.7rem;
+    color: #ccc;
+}
+
+/* Search Results Grid */
+.search-results-grid {
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 30px 15px;
+    padding: 100px 4% 50px;
+}
+
+.search-results-grid .song-card {
+    min-width: 0;
+    max-width: none;
+}
+
+/* Add Song Modal & Forms */
+.add-song-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.add-song-form input {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 12px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.category-selection {
+    text-align: left;
+    margin: 10px 0;
+}
+
+.category-selection label {
+    display: block;
+    margin-bottom: 10px;
+    color: #aaa;
+    font-weight: bold;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    background: #222;
+    padding: 15px;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.checkbox-item input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.save-btn-large {
+    background: var(--netflix-red);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.save-btn-large:hover {
+    background: #b20710;
+}
+
+.close-add-modal {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 2.5rem;
+    cursor: pointer;
+    color: #fff;
+    z-index: 100;
+}
+
+/* Modal General */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+    background-color: #181818;
+    margin: 3% auto;
+    width: 70%;
+    max-width: 900px;
+    max-height: 90vh;      /* Never taller than the screen */
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+}
+
+.video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.modal-info {
+    padding: 20px;
+    overflow-y: auto;      /* Scroll only the info/admin panel */
+    flex: 1;               /* Takes remaining space after the video */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+}
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+#editUrlBtn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--netflix-red);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+#editUrlBtn:hover {
+    background: var(--netflix-red);
+    transform: scale(1.05);
+}
+
+#addToSetlistBtn {
+    background: #2ecc71;
+    border: 1px solid #27ae60;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+#addToSetlistBtn:hover {
+    background: #27ae60;
+    transform: scale(1.05);
+}
+
+/* Painel Inline de Edição de URL */
+.url-editor-panel {
+    margin-top: 15px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    padding: 16px;
+    animation: fadeInDown 0.2s ease;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.search-container {
+    position: relative;
+    max-width: 400px;
+    width: 100%;
+    margin: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#forceRefreshBtn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, color 0.3s ease;
+    border-radius: 50%;
+}
+
+#forceRefreshBtn:hover {
+    color: #e50914;
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#forceRefreshBtn.spinning i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+#searchInput {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid #333;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.url-editor-panel p {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.url-editor-panel input {
+    width: 100%;
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.url-editor-panel input:focus {
+    border-color: var(--netflix-red);
+}
+
+.url-editor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.save-url-btn {
+    background: var(--netflix-red);
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.save-url-btn:hover { background: #b20710; }
+
+.cancel-url-btn {
+    background: transparent;
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 9px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.cancel-url-btn:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+/* Admin Panel Sections */
+.editor-section {
+    margin-bottom: 4px;
+}
+
+.editor-section-title {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.editor-section-title.danger {
+    color: #ff6b6b;
+}
+
+.editor-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin: 16px 0;
+}
+
+/* Category Checkboxes inside Editor */
+.edit-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    background: #1a1a1a;
+    padding: 12px;
+    border-radius: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.edit-checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #ccc;
+}
+
+.edit-checkbox-grid input[type=checkbox] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--netflix-red);
+    cursor: pointer;
+}
+
+/* Delete Zone */
+.delete-section { margin-top: 4px; }
+
+.delete-song-btn {
+    background: transparent;
+    border: 1px solid #ff6b6b;
+    color: #ff6b6b;
+    padding: 9px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.delete-song-btn:hover {
+    background: rgba(255,107,107,0.15);
+}
+
+.delete-confirm-box {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.3);
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.delete-confirm-box p {
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.delete-final-btn {
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.delete-final-btn:hover { background: #a93226; }
+
+.close-modal {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    color: #fff;
+    font-size: 1.6rem;
+    cursor: pointer;
+    z-index: 100;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    border: 1px solid #555;
+    transition: background 0.2s;
+}
+.close-modal:hover {
+    background: rgba(229,9,20,0.8);
+    border-color: #e50914;
+}
+
+/* Password Gate Modal */
+.password-gate-content {
+    max-width: 420px !important;
+    width: 90% !important;
+    margin: 15% auto !important;
+    overflow: visible !important;
+    text-align: center;
+}
+
+.close-password-modal {
+    position: absolute;
+    right: 16px;
+    top: 12px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #888;
+    z-index: 100;
+}
+
+.close-password-modal:hover { color: #fff; }
+
+.password-gate-body {
+    padding: 40px 30px 30px;
+}
+
+.password-gate-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(229,9,20,0.15);
+    border: 2px solid var(--netflix-red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 1.6rem;
+    color: var(--netflix-red);
+}
+
+.password-gate-body h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.password-gate-body > p {
+    color: #aaa;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.password-input-wrap {
+    display: flex;
+    gap: 8px;
+}
+
+.password-input-wrap input {
+    flex: 1;
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 11px 14px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.password-input-wrap input:focus {
+    border-color: var(--netflix-red);
+}
+
+.password-input-wrap button {
+    background: var(--netflix-red);
+    color: #fff;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.password-input-wrap button:hover { background: #b20710; }
+
+.password-error {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-top: 12px;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+/* Footer & Branding */
+footer {
+    padding: 40px 4%;
+    text-align: center;
+    background: #111;
+    border-top: 1px solid #222;
+    color: #757575;
+}
+
+.footer-dev {
+    color: var(--netflix-red) !important;
+    font-weight: bold;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+/* Teams Setlist Interface */
+.teams-container {
+    padding: 100px 4% 50px;
+    min-height: 80vh;
+}
+
+.teams-header {
+    margin-bottom: 20px;
+}
+
+.teams-header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ── Grid de botões de equipe ── */
+.team-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 480px;
+}
+
+/* Botão inativo — apagado para não confundir */
+.team-btn {
+    padding: 14px 8px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    background: #1a1a1a;
+    color: #444;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+    opacity: 0.45;
+}
+
+.team-btn:hover {
+    opacity: 0.75;
+    border-color: #666;
+    color: #999;
+}
+
+/* Botão ativo — cor da equipe, destaque máximo */
+.team-btn[data-team="Start"].team-btn-active    { background:#ff4757; border-color:#ff4757; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(255,71,87,0.6); transform: scale(1.05); }
+.team-btn[data-team="Amarelo"].team-btn-active  { background:#f1c40f; border-color:#f1c40f; color:#000; opacity:1; box-shadow: 0 0 18px rgba(241,196,15,0.6); transform: scale(1.05); }
+.team-btn[data-team="Laranja"].team-btn-active  { background:#e67e22; border-color:#e67e22; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(230,126,34,0.6); transform: scale(1.05); }
+.team-btn[data-team="Azul"].team-btn-active     { background:#3498db; border-color:#3498db; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(52,152,219,0.6); transform: scale(1.05); }
+.team-btn[data-team="Verde"].team-btn-active    { background:#2ecc71; border-color:#2ecc71; color:#fff; opacity:1; box-shadow: 0 0 18px rgba(46,204,113,0.6); transform: scale(1.05); }
+.team-btn[data-team="Branco"].team-btn-active   { background:#f5f6fa; border-color:#f5f6fa; color:#000; opacity:1; box-shadow: 0 0 18px rgba(245,246,250,0.5); transform: scale(1.05); }
+
+/* Quando há um botão ativo, os outros ficam ainda mais apagados */
+.team-btn-grid:has(.team-btn-active) .team-btn:not(.team-btn-active) {
+    opacity: 0.2;
+}
+
+@media (max-width: 400px) {
+    .team-btn-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .team-btn {
+        padding: 16px 8px;
+        font-size: 0.9rem;
+    }
+}
+
+.team-selector {
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 1rem;
+    outline: none;
+    min-width: 200px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.team-selector.team-selected-Start { background-color: #ff4757; color: #fff; border-color: #ff4757; }
+.team-selector.team-selected-Amarelo { background-color: #f1c40f; color: #000; border-color: #f1c40f; }
+.team-selector.team-selected-Laranja { background-color: #e67e22; color: #fff; border-color: #e67e22; }
+.team-selector.team-selected-Azul { background-color: #3498db; color: #fff; border-color: #3498db; }
+.team-selector.team-selected-Verde { background-color: #2ecc71; color: #fff; border-color: #2ecc71; }
+.team-selector.team-selected-Branco { background-color: #f5f6fa; color: #000; border-color: #ccc; }
+
+.team-selector option {
+    background-color: #222;
+    color: #fff;
+}
+.team-selector option.opt-start { background-color: #ff4757; color: #fff; }
+.team-selector option.opt-amarelo { background-color: #f1c40f; color: #000; }
+.team-selector option.opt-laranja { background-color: #e67e22; color: #fff; }
+.team-selector option.opt-azul { background-color: #3498db; color: #fff; }
+.team-selector option.opt-verde { background-color: #2ecc71; color: #fff; }
+.team-selector option.opt-branco { background-color: #f5f6fa; color: #000; }     
+
+.team-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.song-card.setlist-card .card-info {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 50%, rgba(0,0,0,0.7) 100%);
+}
+
+.setlist-obs {
+    color: #2ecc71;
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-top: 3px;
+    padding: 2px 0;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .search-results-grid {
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+        gap: 15px 10px;
+        padding-top: 130px;
+        align-content: start;
+    }
+
+    .search-results-grid .song-card {
+        height: 110px;
+    }
+
+    .search-results-grid .card-info h4 {
+        font-size: 0.75rem;
+    }
+
+    .search-results-grid .card-info p {
+        font-size: 0.6rem;
+    }
+
+    header {
+        padding: 10px 4%;
+        flex-wrap: wrap;
+        background-color: #000;
+    }
+
+    .category-overlay {
+        top: 120px;
+        bottom: 0;
+        height: auto;
+        padding-bottom: 80px;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    nav {
+        display: none;
+        position: absolute;
+        top: 110px;
+        left: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.95);
+        padding: 20px;
+        border-bottom: 1px solid #222;
+    }
+
+    nav.active {
+        display: block;
+    }
+
+    nav ul {
+        flex-direction: column;
+        margin-left: 0;
+    }
+
+    nav ul li {
+        margin: 10px 0;
+    }
+
+    .add-btn-main {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .search-container {
+        display: flex;
+        width: 100%;
+        order: 3;
+        margin-top: 10px;
+    }
+
+    .search-container input {
+        width: 100%;
+        font-size: 16px;
+    }
+    
+    .hero {
+        height: 35vh;
+    }
+    
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        margin: 0;
+        border-radius: 0;   /* Full screen sem bordas arredondadas no celular */
+    }
+
+    .video-wrapper {
+        flex-shrink: 0;     /* O vídeo não encolhe */
+    }
+
+    .modal-info {
+        padding: 14px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .url-editor-panel {
+        padding: 12px;
+    }
+
+    .edit-checkbox-grid {
+        grid-template-columns: 1fr 1fr;
+        max-height: 150px;
+    }
+
+    .checkbox-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .adm-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .teams-container {
+        padding-top: 130px;
+        min-height: unset;
+    }
+
+    /* Impede gap extra na grade de cards dentro de Equipes */
+    .teams-container .search-results-grid {
+        padding-top: 0;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODO LOUVOR — Full-Screen Praise View
+   ═══════════════════════════════════════════════════════ */
+
+.praise-mode-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #080808;
+    z-index: 9999;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.praise-mode-modal.active {
+    display: flex;
+}
+
+/* ─── Header / Controls ─── */
+.praise-header {
+    background: rgba(15,15,15,0.97);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 10px 14px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(12px);
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+    flex-shrink: 0;
+}
+
+.praise-header.hidden {
+    transform: translateY(-100%);
+}
+
+.praise-header-row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.praise-song-info { flex: 1; min-width: 0; }
+
+.praise-song-info h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.praise-song-info p {
+    font-size: 0.78rem;
+    color: #888;
+    margin: 0;
+}
+
+.praise-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Mode Toggle */
+.praise-mode-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.praise-mode-toggle button {
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.praise-mode-toggle button.active {
+    background: var(--netflix-red);
+    color: #fff;
+}
+
+/* Control Groups */
+.praise-control-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 4px 9px;
+}
+
+.praise-control-group label {
+    font-size: 0.7rem;
+    color: #888;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.praise-ctrl-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #fff;
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.praise-ctrl-btn:hover { background: rgba(255,255,255,0.22); }
+
+.praise-value-display {
+    font-size: 0.82rem;
+    color: #fff;
+    min-width: 28px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Musicians-only controls */
+.praise-musicians-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Capo Select */
+.praise-capo-select {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Auto-scroll */
+.praise-scroll-btn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #aaa;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.praise-scroll-btn.active {
+    background: rgba(39,174,96,0.25);
+    border-color: #27ae60;
+    color: #2ecc71;
+}
+
+.praise-speed-slider {
+    -webkit-appearance: none;
+    width: 65px; height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.15);
+    outline: none;
+    cursor: pointer;
+}
+
+.praise-speed-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--netflix-red);
+    cursor: pointer;
+}
+
+/* Close button */
+.praise-close-btn {
+    background: rgba(229,9,20,0.12);
+    border: 1px solid rgba(229,9,20,0.3);
+    color: #e50914;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.praise-close-btn:hover {
+    background: var(--netflix-red);
+    color: #fff;
+}
+
+/* ─── Content Area ─── */
+.praise-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 5% 100px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Lyrics only */
+.praise-lyrics {
+    max-width: 680px;
+    margin: 0 auto;
+    color: #f2f2f2;
+    line-height: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'Roboto', sans-serif;
+    text-align: left;
+}
+
+/* Cifra (chords + lyrics) */
+.praise-cifra {
+    max-width: 860px;
+    margin: 0 auto;
+    color: #f0f0f0;
+    line-height: 2.3;
+    white-space: pre;
+    font-family: 'Roboto Mono', 'Courier New', monospace;
+    word-break: break-word;
+    overflow-x: auto;
+    text-align: left;
+}
+
+/* Highlighted chords — amber/gold */
+.praise-chord {
+    color: #f5c842;
+    font-weight: 700;
+}
+
+/* Empty state */
+.praise-no-cifra {
+    text-align: center;
+    padding: 60px 20px;
+    color: #555;
+}
+
+.praise-no-cifra i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    display: block;
+    color: #2a2a2a;
+}
+
+.praise-no-cifra p { font-size: 0.95rem; line-height: 1.6; }
+
+/* Floating toggle controls button */
+.praise-toggle-header {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(20,20,20,0.92);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #aaa;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.praise-toggle-header:hover {
+    background: rgba(229,9,20,0.15);
+    border-color: var(--netflix-red);
+    color: var(--netflix-red);
+}
+
+/* ─── Setlist Card Praise Buttons ─── */
+.setlist-card {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 140px;
+}
+
+.setlist-praise-btns {
+    display: flex;
+    gap: 5px;
+    padding: 6px 6px 6px;
+    background: rgba(0,0,0,0.6);
+}
+
+.setlist-praise-btn {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #bbb;
+    padding: 5px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.setlist-praise-btn.vocal-btn:hover {
+    background: rgba(52,152,219,0.25);
+    border-color: #3498db;
+    color: #5dade2;
+}
+
+.setlist-praise-btn.musician-btn:hover {
+    background: rgba(245,200,66,0.15);
+    border-color: #f5c842;
+    color: #f5c842;
+}
+
+/* Lyrics textarea in forms */
+.add-song-form textarea,
+.url-editor-panel textarea {
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: 'Roboto', sans-serif;
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+}
+
+.add-song-form textarea:focus,
+.url-editor-panel textarea:focus {
+    border-color: var(--netflix-red);
+}
+
+/* Cifra Club Input Group */
+.cifraclub-input-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.capture-btn {
+    background: #f5c842;
+    color: #000;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.3s;
+}
+
+.capture-btn:hover {
+    background: #dab33a;
+}
+
+/* Performance Screen */
+.performance-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    color: #fff;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* garante que header + player + content fiquem dentro da tela */
+}
+
+.perf-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 4%;
+    background: #141414;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+    position: relative; /* necessário para o key-grid-popup ser posicionado em relação ao header */
+    z-index: 10;
+}
+
+.perf-back-btn {
+    background: transparent;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.perf-title-group {
+    text-align: center;
+}
+
+.perf-title-group h1 {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+}
+
+.perf-title-group p {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.perf-controls {
+    display: flex;
+    gap: 20px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.control-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: #888;
+}
+
+.transpose-btns {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #222;
+    padding: 5px 15px;
+    border-radius: 4px;
+}
+
+.key-selector-trigger {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    min-width: 80px;
+}
+
+/* Grade de Tons Estilo Cifra Club (Visual Dark Pro) */
+.key-grid-popup {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222; /* Fundo Escuro */
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    z-index: 10000;
+    width: 280px;
+    border: 1px solid #444;
+}
+
+@media (max-width: 600px) {
+    .key-grid-popup {
+        width: 92%;
+        top: 60px;
+        padding: 10px;
+    }
+}
+
+.key-grid-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.half-step-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    flex: 1;
+    margin: 0 5px;
+    font-weight: 500;
+}
+
+.half-step-btn:hover {
+    background: #444;
+}
+
+.key-grid-items {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.key-btn {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 12px 0;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.key-btn:hover {
+    background: #444;
+}
+
+.key-btn.active {
+    background: var(--netflix-red);
+    color: #fff;
+    border-color: var(--netflix-red);
+}
+
+.restore-key-btn {
+    width: 100%;
+    background: #333;
+    border: 1px solid #555;
+    padding: 10px;
+    border-radius: 6px;
+    color: #ff5e5e;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* ── Capotraste ── */
+.capo-popup {
+    top: 70px;
+}
+.capo-grid-items {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+.capo-btn-item {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-align: center;
+    transition: background 0.2s, border-color 0.2s;
+}
+.capo-btn-item:hover {
+    background: #444;
+}
+.capo-btn-item.active {
+    background: rgba(229,9,20,0.2);
+    border-color: var(--netflix-red);
+    color: var(--netflix-red);
+}
+.capo-btn {
+    font-size: 0.78rem !important;
+    min-width: 60px;
+}
+
+/* ── Badge de Capotraste estilo Cifra Club ── */
+.capo-badge-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1.5px solid rgba(255,160,0,0.6);
+    color: #FFA000;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s;
+    min-width: 52px;
+    text-align: center;
+}
+.capo-badge-btn:hover {
+    background: rgba(255,160,0,0.15);
+    border-color: #FFA000;
+}
+.capo-control-group {
+    align-items: center;
+}
+
+anspose-btns button, .perf-controls button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    width: 30px;
+}
+
+.perf-controls button:hover {
+    color: var(--netflix-red);
+}
+
+/* Player colapsável */
+.perf-player-wrapper {
+    width: 100%;
+    background: #000;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+    /* Altura fixa no desktop, proporcional no mobile */
+    height: 220px;
+    max-height: 35vh; /* nunca ocupa mais de 35% da tela — deixa espaço para a letra */
+}
+
+.perf-player-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: none;
+}
+
+@media (max-width: 600px) {
+    .perf-player-wrapper {
+        /* No mobile: aspect ratio 16:9 proporcional */
+        height: auto;
+        aspect-ratio: 16 / 9;
+        max-height: 40vw;
+    }
+}
+
+/* Botão toggle do player */
+.player-toggle-btn {
+    background: #222;
+    border: 1px solid #555;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.player-toggle-btn:hover {
+    background: var(--netflix-red);
+    border-color: var(--netflix-red);
+}
+
+.perf-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 8% 40px;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1.8;
+    /* Sem padding-top artificial — o header e player ficam no fluxo flex normal */
+}
+
+/* Linha padrão — letra, tamanho Cifra Club */
+.perf-line {
+    white-space: pre-wrap;
+    min-height: 1.5em;
+    font-size: 15px;
+    color: #e8e8e8;
+}
+
+/* Vocal: mesma fonte, sem override */
+.performance-screen.vocal-mode .perf-line {
+    font-size: 15px;
+    color: #e8e8e8;
+    text-align: left;
+    padding-left: 0;
+}
+
+/* Acordes — amarelo, menor, igual Cifra Club */
+.chord-line {
+    color: #f5c842;
+    font-weight: bold;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Marcadores de estrutura [Refrão], [Verso], etc. */
+.structure-marker {
+    color: #e09b2d;
+    font-weight: bold;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+/* Variável de tamanho de fonte — controlada via JS */
+#performanceContent {
+    --perf-font-size: 15px;
+}
+
+#performanceContent .perf-line,
+#performanceContent .vocal-line {
+    font-size: var(--perf-font-size) !important;
+}
+
+#performanceContent .chord-line {
+    font-size: calc(var(--perf-font-size) - 2px) !important;
+}
+
+#performanceContent .structure-marker {
+    font-size: calc(var(--perf-font-size) - 2px) !important;
+}
+
+/* Label do tamanho de fonte */
+.font-size-label {
+    font-size: 0.8rem;
+    color: #fff;
+    min-width: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Botão Wake Lock */
+/* Botão AO VIVO nas abas de equipe */
+.team-wake-lock-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid #e50914;
+    color: #e50914;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+
+.team-wake-lock-btn:hover {
+    background: rgba(229,9,20,0.12);
+}
+
+/* Bolinha indicadora */
+.live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e50914;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+/* Ativo — verde com pulso */
+.team-wake-lock-btn.wake-lock-active {
+    border-color: #2ecc71;
+    color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+    animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+.team-wake-lock-btn.wake-lock-active .live-dot {
+    background: #2ecc71;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+    0%, 100% { box-shadow: 0 0 6px rgba(46, 204, 113, 0.3); }
+    50%       { box-shadow: 0 0 16px rgba(46, 204, 113, 0.8); }
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+
+/* Controles de rolagem com + e - */
+.scroll-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #222;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.scroll-controls button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: color 0.2s;
+}
+
+.scroll-controls button:hover {
+    color: var(--netflix-red);
+}
+
+#toggleScroll {
+    font-size: 1rem !important;
+    width: 28px !important;
+}
+
+/* Team View Tabs */
+.team-sub-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.sub-tab-btn {
+    background: #222;
+    border: 1px solid #444;
+    color: #888;
+    padding: 10px 25px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.sub-tab-btn.active {
+    background: var(--netflix-red);
+    color: #fff;
+    border-color: var(--netflix-red);
+    box-shadow: 0 0 10px rgba(229,9,20,0.5);
+}
+
+/* ─── Praise Mode Mobile ─── */
+@media (max-width: 600px) {
+    /* Header vira 2 linhas */
+    .perf-header {
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 8px 10px;
+        align-items: center;
+    }
+
+    /* Linha 1: Voltar (esquerda) | Título (centro) */
+    .perf-back-btn {
+        order: 1;
+        padding: 5px 10px;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+    }
+
+    .perf-title-group {
+        order: 2;
+        flex: 1;
+        text-align: center;
+    }
+    .perf-title-group h1 { font-size: 0.9rem; margin-bottom: 1px; }
+    .perf-title-group p  { font-size: 0.65rem; }
+
+    /* Linha 2: controles divididos em dois grupos */
+    .perf-controls {
+        order: 3;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: nowrap;
+        border-top: 1px solid #2a2a2a;
+        margin-top: 4px;
+        padding-top: 6px;
+        gap: 0;
+    }
+
+    .control-group {
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+        align-items: center;
+    }
+
+    .control-label {
+        font-size: 0.5rem;
+        letter-spacing: 0.02em;
+    }
+
+    /* Player — ícone pequeno */
+    .control-group:has(#perfPlayerToggle) {
+        flex: 0 0 auto;
+        padding-right: 6px;
+    }
+    .player-toggle-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+
+    /* Tom — botão largo o suficiente */
+    .transpose-btns {
+        padding: 3px 10px;
+    }
+    .key-selector-trigger {
+        font-size: 1.05rem;
+        font-weight: bold;
+        min-width: 32px;
+    }
+
+    /* Sublabel some no mobile */
+    .perf-tom-sub { display: none !important; }
+
+    /* Capo — não corta o texto */
+    #capoControlGroup {
+        flex: 1 1 auto;
+    }
+    .capo-badge-btn {
+        padding: 3px 8px;
+        font-size: 0.72rem;
+        white-space: nowrap;
+        border-radius: 4px;
+        min-width: 0;
+    }
+
+    /* Separador visual entre Tom/Capo e Fonte/Rolagem */
+    #capoControlGroup {
+        border-right: 1px solid #333;
+        padding-right: 8px;
+        margin-right: 0;
+    }
+
+    /* Fonte */
+    .scroll-controls { gap: 3px; }
+    .scroll-controls button {
+        width: 26px;
+        height: 26px;
+        font-size: 0.72rem;
+        padding: 0;
+    }
+    .font-size-label {
+        font-size: 0.8rem;
+        min-width: 16px;
+        text-align: center;
+    }
+
+    /* Separador Fonte/Rolagem visível no mobile */
+    .perf-controls-separator {
+        display: flex;
+        width: 1px;
+        min-width: 1px;
+        height: 28px;
+        background: #444;
+        margin: 0 6px;
+        align-self: center;
+    }
+
+    /* Nav buttons menores no mobile */
+    .perf-nav-btn {
+        padding: 5px 8px;
+        font-size: 0.72rem;
+    }
+
+    .perf-content { padding: 12px 4% 40px; }
+}
+
+
+
+/* ── Botões ADM na tela de performance ── */
+.perf-admin-actions {
+    display: flex;
+    gap: 8px;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    padding: 4px 0;
+}
+.perf-admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.perf-admin-btn:hover {
+    border-color: #e50914;
+    color: #e50914;
+}
+
+/* ── Botões Vocal/Músicos/Ao Vivo na tela de performance ── */
+.perf-mode-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    padding: 6px 0 2px;
+    border-top: 1px solid #2a2a2a;
+    margin-top: 4px;
+}
+.perf-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #aaa;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.perf-mode-btn.active {
+    background: #e50914;
+    border-color: #e50914;
+    color: #fff;
+    font-weight: bold;
+}
+.perf-mode-btn:hover:not(.active) {
+    border-color: #888;
+    color: #fff;
+}
+.perf-wakelock-btn.wakelock-on {
+    background: #1a3a1a;
+    border-color: #2ecc71;
+    color: #2ecc71;
+}
+.perf-wakelock-btn .live-dot {
+    width: 7px;
+    height: 7px;
+    background: #e50914;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 1s infinite;
+}
+.perf-wakelock-btn.wakelock-on .live-dot {
+    background: #2ecc71;
+}
+
+/* ── Botão X fechar performance ── */
+.perf-close-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #aaa;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.perf-close-btn:hover {
+    background: #e50914;
+    border-color: #e50914;
+    color: #fff;
+}
+
+/* ── Grupo de navegação Anterior/Próximo ── */
+.perf-nav-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.perf-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+}
+.perf-nav-btn:hover {
+    background: #e50914;
+    border-color: #e50914;
+    color: #fff;
+}
+
+/* ── Botão X remover música da escala ── */
+.setlist-card-remove-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(229,9,20,0.85);
+    border: none;
+    color: #fff;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s, transform 0.15s;
+}
+.setlist-card-remove-btn:hover {
+    background: #e50914;
+    transform: scale(1.1);
+}
+
+/* ── Separador vertical entre Fonte e Rolagem ── */
+.perf-controls-separator {
+    width: 1px;
+    min-width: 1px;
+    height: 30px;
+    background: #444;
+    margin: 0 8px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* ── Botão Próximo na performance (legado — remover se existir) ── */
+.perf-next-btn {
+    background: #1a1a2e;
+    border-color: #e50914;
+    color: #e50914;
+}
+.perf-next-btn:hover {
+    background: #e50914;
+    color: #fff;
+}
+.song-card { position: relative; }
+
+.no-lyrics-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(229,9,20,0.85);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 3px 6px;
+    border-radius: 4px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* ── Abas Vocal/Músico no modal da página inicial ───────── */
+.modal-perf-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.modal-perf-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #222;
+    border: 1px solid #444;
+    color: #888;
+    padding: 9px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.modal-perf-btn.active {
+    background: var(--netflix-red);
+    border-color: var(--netflix-red);
+    color: #fff;
+}
+
+.modal-perf-btn.live-btn {
+    border-color: #e50914;
+    color: #e50914;
+}
+
+.modal-perf-btn.live-btn.wake-lock-active {
+    border-color: #2ecc71;
+    color: #2ecc71;
+    animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+/* ── Contador nos botões de equipe ──────────────────────── */
+.team-btn { position: relative; }
+
+.team-count {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+.team-btn-active .team-count {
+    opacity: 1;
+    font-weight: 700;
+}
+
+/* ── Setas de reordenação na escala ─────────────────────── */
+.reorder-btns {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 3;
+}
+
+.reorder-btn {
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.reorder-btn:hover { background: var(--netflix-red); }
+
+/* ── Garantir position relative no setlist-card ────────── */
+.setlist-card { position: relative; }
+
+
+/* ── Tom sub-label "(forma G)" ──────────────────────────────── */
+.perf-tom-sub {
+    display: block;
+    font-size: 0.6rem;
+    color: #aaa;
+    text-align: center;
+    margin-top: 2px;
+    white-space: nowrap;
+    font-weight: normal;
+    letter-spacing: 0;
+}
+
+/* ── Garantir control-group com flex-direction column para sub-label ─ */
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
