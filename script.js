@@ -1,7 +1,8 @@
 // Configurações Supabase
-const SUPABASE_URL = "https://chjirzwxsewlhbnhpvjh.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoamlyend4c2V3bGhibmhwdmpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNTk1NDAsImV4cCI6MjA5MTgzNTU0MH0.tOz51eKBGv0thiZLRIeVv7qcIR8mFANuFJ4qHelPlRA";
+const SUPABASE_URL = "https://rxcfnwhgkdauzyuekjxf.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4Y2Zud2hna2RhdXp5dWVranhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTAyODAsImV4cCI6MjA5MjIyNjI4MH0.QewcMlTw0L6gXkz-WXwQvSu-vZXtO3vR48X2a_-FH9g";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 
 // ─── Controle de Acesso de Líderes ───────────────────────────────────
 const AUTH_KEY = 'ibb_leader_auth';
