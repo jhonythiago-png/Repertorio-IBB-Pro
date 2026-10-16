@@ -87,121 +87,8 @@ function parseFormaFromText(txt) {
 
 // --- Motores de Captura e Transposição ---
 
-async function fetchCifraClubContent(url) {
-    if (!url.includes('cifraclub.com.br')) {
-        alert('Por favor, insira um link válido do Cifra Club.');
-        return null;
-    }
-
-    // ── EXPERT STEP 1: Transformação para link de impressão ──────────────
-    // A página de impressão (/imprimir.html) é muito mais fácil de capturar
-    let printUrl = url.trim();
-    if (!printUrl.endsWith('/imprimir.html') && !printUrl.endsWith('/imprimir.html/')) {
-        printUrl = printUrl.replace(/\/$/, ""); // Remove barra final se houver
-        printUrl += '/imprimir.html';
-    }
-
-    // ── EXPERT STEP 2: Motor de Rotação de Proxies (4 estratégias) ───────
-    const rotation = [
-        { name: 'AllOrigins JSON', url: (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}&ts=${Date.now()}`, type: 'json' },
-        { name: 'AllOrigins Raw',  url: (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&ts=${Date.now()}`, type: 'text' },
-        { name: 'CodeTabs',        url: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, type: 'text' },
-        { name: 'CORSProxy.io',    url: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`, type: 'text' }
-    ];
-
-    console.log('🚀 Iniciando Motor Expert para:', printUrl);
-
-    for (const strategy of rotation) {
-        try {
-            const proxyUrl = strategy.url(printUrl);
-            console.log(`📡 Tentando Estratégia [${strategy.name}]...`);
-            
-            const response = await fetch(proxyUrl);
-            if (!response.ok) {
-                console.warn(`❌ [${strategy.name}] falhou com status: ${response.status}`);
-                continue;
-            }
-
-            let html = '';
-            if (strategy.type === 'json') {
-                const data = await response.json();
-                html = data.contents;
-            } else {
-                html = await response.text();
-            }
-
-            if (!html || html.length < 500) {
-                console.warn(`❌ [${strategy.name}] retornou conteúdo vazio ou inválido.`);
-                continue;
-            }
-
-            // ── EXPERT STEP 3: Extração Cirúrgica ────────────────────────
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Na página de impressão (/imprimir.html), a cifra costuma estar em #cifra_pre
-            // ou em um <pre> direto
-            let cifraElement = doc.querySelector('#cifra_pre') || 
-                               doc.querySelector('.cifra_cnt pre') || 
-                               doc.querySelector('pre');
-            
-            if (cifraElement) {
-                console.log(`✅ SUCESSO via [${strategy.name}]!`);
-                
-                // ── STEP A: extrair Tom e Capo do HTML ANTES de pegar o <pre> ─
-                // (o Cifra Club às vezes coloca essas infos fora do bloco <pre>)
-                let injectedHeader = '';
-
-                // Capo: busca no body inteiro (aparece como texto "Capotraste na 3ª casa")
-                const bodyText = doc.body ? (doc.body.innerText || doc.body.textContent) : '';
-                const capoNum = parseCapoFromText(bodyText);
-                if (capoNum > 0) injectedHeader += `Capotraste na ${capoNum}ª casa\n`;
-
-                // ── STEP B: limpar o texto da cifra ──────────────────────────
-                let cleanedText = (cifraElement.innerText || cifraElement.textContent)
-                    // Remove propaganda
-                    .replace(/Ainda não sabe tocar essa música\?[\s\S]*?Aprenda aqui/gi, '')
-                    // Remove lixo de UI do Cifra Club que vaza pro <pre>
-                    .replace(/^\s*(Anterior|Próximo|cancelar|ok|Mudar todos.*da cifra)\s*$/gim, '')
-                    // Remove linhas de Tom/Capo do <pre> (vamos usar o injectedHeader limpo)
-                    .replace(/^\s*Tom\s*:.*$/gim, '')
-                    .replace(/^\s*Capotraste.*$/gim, '')
-                    // Colapsa mais de 2 linhas vazias consecutivas
-                    .replace(/\n{3,}/g, '\n\n')
-                    .trim();
-
-                // ── STEP C: montar texto final com header limpo no topo ──────
-                if (injectedHeader) {
-                    // Só injeta se o <pre> não já tinha Tom/Capo limpos
-                    cleanedText = injectedHeader.trim() + '\n\n' + cleanedText;
-                }
-
-                return cleanedText;
-            }
-        } catch (err) {
-            console.warn(`⚠️ Erro na estratégia [${strategy.name}]:`, err.message);
-        }
-    }
-
-    // Se todos falharem, tentamos a URL ORIGINAL sem /imprimir como último recurso
-    if (printUrl !== url) {
-        console.log('🔄 Tentativa final com URL original...');
-        // (Isso é recursivo mas só roda uma vez por causa da condição if)
-        // Por simplicidade, vamos apenas avisar o erro aqui para evitar loop infinito
-    }
-
-    const isLocalFile = window.location.protocol === 'file:';
-    let msg = 'O motor Expert não conseguiu furar o bloqueio automaticamente.';
-    
-    if (isLocalFile) {
-        msg += '\n\nO navegador bloqueia essa função em arquivos locais. Tente quando o site estiver online no GitHub.';
-    } else {
-        msg += '\n\nO Cifra Club bloqueou todas as tentativas de captura. \n\nSOLUÇÃO: Abra o link, copie a letra e cole manualmente.';
-    }
-    
-    alert(msg);
-    return null;
-}
+// (Motor de captura por proxies removido: o Cifra Club passou a bloquear
+//  acessos de servidores. A letra agora entra pela Colagem Inteligente.)
 
 function transposeChord(chord, semitones) {
     if (semitones === 0) return chord;
@@ -1005,58 +892,6 @@ function updateScrollSpeedLabel() {
     if (label) label.textContent = scrollSpeed;
 }
 
-// Capturar Cifra Automaticamente (ADM)
-const btnCapturar = document.getElementById('btnCapturarCifra');
-if (btnCapturar) {
-    btnCapturar.onclick = async () => {
-        const url = document.getElementById('addCifraClubUrl').value.trim();
-        if (!url) { alert('Insira o link primeiro!'); return; }
-        
-        const oldText = btnCapturar.textContent;
-        btnCapturar.textContent = 'Capturando...';
-        btnCapturar.disabled = true;
-        
-        const content = await fetchCifraClubContent(url);
-        if (content) {
-            document.getElementById('addCifraPreviewContainer').style.display = 'block';
-            
-            let finalContent = content;
-            let tomInicial = "C";
-            const tomMatch = finalContent.match(/^(?:Tom:\s*)([A-G][b#]?m?)/im);
-            if (tomMatch) {
-                tomInicial = tomMatch[1];
-            } else {
-                let detected = detectFormaKey(finalContent);
-                if (detected) {
-                    tomInicial = detected;
-                }
-                finalContent = `Tom: ${tomInicial}\n\n` + finalContent;
-            }
-            
-            document.getElementById('addCifraTextPreview').value = finalContent;
-            
-            const trigger = document.getElementById('addCaptureKeyTrigger');
-            if (trigger) {
-                trigger.textContent = tomInicial;
-                trigger.dataset.key = tomInicial;
-                trigger.dataset.initialKey = tomInicial;
-            }
-            
-            const container = document.getElementById('addCaptureKeyGrid');
-            if (container) {
-                container.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
-                const normTom = normalizeKey(tomInicial).replace(/m$/i, '');
-                const activeBtn = Array.from(container.querySelectorAll('.key-btn')).find(b => b.dataset.key === normTom);
-                if (activeBtn) activeBtn.classList.add('active');
-            }
-
-            alert('✅ Conteúdo capturado com sucesso! Revise ou transponha abaixo antes de salvar.');
-        }
-        
-        btnCapturar.textContent = oldText;
-        btnCapturar.disabled = false;
-    };
-}
 
 function transposeRawText(text, semitones) {
     if (semitones === 0) return text;
@@ -1167,6 +1002,231 @@ function setupCapturePopup(triggerId, popupId, gridId, textareaId, stepUpId, ste
 // Configurar os dois popups
 setupCapturePopup('addCaptureKeyTrigger', 'addCaptureKeyPopup', 'addCaptureKeyGrid', 'addCifraTextPreview', 'addCaptureStepUp', 'addCaptureStepDown', 'addCaptureRestoreKey');
 setupCapturePopup('editCaptureKeyTrigger', 'editCaptureKeyPopup', 'editCaptureKeyGrid', 'editCifraText', 'editCaptureStepUp', 'editCaptureStepDown', 'editCaptureRestoreKey');
+
+// ═════════════════════════════════════════════════════════════════════
+// COLAGEM INTELIGENTE + CAPO NO CADASTRO/EDIÇÃO
+// O usuário copia a página do Cifra Club (Ctrl+A / Ctrl+C) e cola aqui.
+// O texto é organizado sozinho: sai título/artista/lixo, ficam Tom, Capo e cifra.
+// Só age quando reconhece o padrão do Cifra Club (linha "Tom:" no início).
+// ═════════════════════════════════════════════════════════════════════
+
+// Limpa o texto colado. Retorna null se NÃO parecer texto do Cifra Club.
+function smartCleanCifraPaste(raw) {
+    if (!raw) return null;
+    let t = raw
+        .replace(/\r\n?/g, '\n')
+        .replace(/[\u00A0\u2007\u202F]/g, ' ')   // espaços invisíveis
+        .replace(/[\u200B\uFEFF]/g, '')
+        .replace(/\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g, '$1'); // [Artista](link) → Artista
+
+    let lines = t.split('\n').map(l => l.replace(/\s+$/, ''));
+
+    // Precisa ter a linha "Tom: X" nas primeiras linhas (padrão Cifra Club)
+    const tomIdx = lines.findIndex((l, i) => i < 25 && /^\s*Tom\s*:\s*[A-G]/.test(l));
+    if (tomIdx === -1) return null;
+
+    // Tudo antes do "Tom:" é título/artista/menu → descarta
+    lines = lines.slice(tomIdx);
+
+    // Rodapé do Cifra Club → corta a partir dele
+    const footerRx = /^\s*(Composição de |Composição:|Colaboração e revisão|Essa informação está errada|Enviada por )/i;
+    const fIdx = lines.findIndex((l, i) => i > 0 && footerRx.test(l));
+    if (fIdx > 0) lines = lines.slice(0, fIdx);
+
+    // Lixo de interface que às vezes vem junto
+    const junkRx = /^\s*(Anterior|Próximo|cancelar|ok|Mudar todos.*da cifra|Ainda não sabe tocar essa música\?.*|Aprenda aqui.*)\s*$/i;
+    lines = lines.filter(l => !junkRx.test(l));
+
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Define o capo no texto da cifra mantendo os acordes como estão.
+// Ex: "Tom: C" + capo 2  →  "Tom: D (com forma de C)" + "Capotraste: 2ª casa"
+function setCapoInCifraText(text, newCapo) {
+    if (!text || !text.trim()) return text;
+    const curCapo = parseCapoFromText(text);
+    if (curCapo === newCapo) return text;
+
+    // Remove linhas de capo existentes (formato antigo ou novo)
+    let lines = text.split('\n').filter(l =>
+        !/^\s*Capotraste\b/i.test(l) && !/^\s*Capo\s*:?\s*\d{1,2}\b[^\n]{0,20}$/i.test(l)
+    );
+
+    let tomIdx = lines.findIndex(l => /^\s*Tom\s*:/i.test(l));
+    const tomLine = tomIdx !== -1 ? lines[tomIdx] : '';
+    const tomKeyMatch = tomLine.match(/^\s*Tom\s*:\s*([A-G][b#]?m?)/);
+    const tomKey = tomKeyMatch ? tomKeyMatch[1] : null;
+
+    // Forma = nota em que os acordes estão escritos
+    let forma = parseFormaFromText(tomLine);
+    if (!forma) {
+        if (curCapo > 0 || !tomKey) forma = detectFormaKey(lines.join('\n')) || tomKey;
+        else forma = tomKey;
+    }
+    if (!forma) forma = 'C';
+
+    const quality = forma.toLowerCase().endsWith('m') ? 'm' : '';
+    const fIdx = SCALE.indexOf(normalizeKey(forma));
+    if (fIdx === -1) return text; // não conseguiu entender o tom → não mexe
+
+    const newTomLine = newCapo > 0
+        ? `Tom: ${SCALE[(fIdx + newCapo) % 12]}${quality} (com forma de ${forma})`
+        : `Tom: ${forma}`;
+
+    if (tomIdx !== -1) {
+        lines[tomIdx] = newTomLine;
+    } else {
+        lines.unshift(newTomLine, '');
+        tomIdx = 0;
+    }
+    if (newCapo > 0) lines.splice(tomIdx + 1, 0, `Capotraste: ${newCapo}ª casa`);
+
+    return lines.join('\n');
+}
+
+// Liga textarea + seletor de tom + seletor de capo + botão "Abrir no Cifra Club"
+function setupCifraEditor(cfg) {
+    const ta          = document.getElementById(cfg.textareaId);
+    const keyTrigger  = document.getElementById(cfg.keyTriggerId);
+    const keyGrid     = document.getElementById(cfg.keyGridId);
+    const capoTrigger = document.getElementById(cfg.capoTriggerId);
+    const capoPopup   = document.getElementById(cfg.capoPopupId);
+    const capoGrid    = document.getElementById(cfg.capoGridId);
+    const urlInput    = document.getElementById(cfg.urlInputId);
+    const openBtn     = document.getElementById(cfg.openBtnId);
+    if (!ta) return null;
+
+    function markCapoActive(n) {
+        if (!capoGrid) return;
+        capoGrid.querySelectorAll('.capo-btn-item').forEach(b =>
+            b.classList.toggle('active', parseInt(b.dataset.capo) === n));
+    }
+
+    function updateOpenBtn() {
+        if (!openBtn) return;
+        const ok = !!(urlInput && /cifraclub\.com\.br/i.test(urlInput.value));
+        openBtn.disabled = !ok;
+        openBtn.style.opacity = ok ? '1' : '0.4';
+        openBtn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+        openBtn.title = ok ? 'Abrir a cifra salva em uma nova aba' : 'Cole o link do Cifra Club para ativar';
+    }
+
+    // Atualiza os seletores de Tom e Capo a partir do texto
+    function sync(updateInitialKey) {
+        const txt = ta.value || '';
+        const m = txt.match(/^\s*Tom\s*:\s*([A-G][b#]?m?)/m);
+        const key = m ? m[1] : (txt.trim() ? null : 'C');
+        if (key && keyTrigger) {
+            keyTrigger.textContent = key;
+            keyTrigger.dataset.key = key;
+            if (updateInitialKey) keyTrigger.dataset.initialKey = key;
+            if (keyGrid) {
+                const norm = normalizeKey(key).replace(/m$/i, '');
+                keyGrid.querySelectorAll('.key-btn').forEach(b =>
+                    b.classList.toggle('active', b.dataset.key === norm));
+            }
+        }
+        const capo = parseCapoFromText(txt);
+        if (capoTrigger) {
+            capoTrigger.textContent = capo > 0 ? `${capo}ª casa` : 'S/Capo';
+            capoTrigger.dataset.capo = capo;
+        }
+        markCapoActive(capo);
+        updateOpenBtn();
+    }
+
+    // Monta os botões de capo (0 a 12)
+    if (capoGrid) {
+        capoGrid.innerHTML = '';
+        for (let i = 0; i <= 12; i++) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'capo-btn-item';
+            b.dataset.capo = i;
+            b.textContent = i === 0 ? 'Sem capo' : `${i}ª`;
+            b.onclick = () => {
+                if (!ta.value.trim()) {
+                    alert('Cole a letra/cifra primeiro, depois escolha o capo.');
+                    return;
+                }
+                ta.value = setCapoInCifraText(ta.value, i);
+                sync(false);
+                if (capoPopup) capoPopup.style.display = 'none';
+            };
+            capoGrid.appendChild(b);
+        }
+    }
+
+    if (capoTrigger && capoPopup) {
+        capoTrigger.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = capoPopup.style.display === 'block';
+            document.querySelectorAll('.key-grid-popup').forEach(p => p.style.display = 'none');
+            markCapoActive(parseCapoFromText(ta.value));
+            capoPopup.style.display = isVisible ? 'none' : 'block';
+        };
+        document.addEventListener('click', (e) => {
+            if (!capoPopup.contains(e.target) && e.target !== capoTrigger) capoPopup.style.display = 'none';
+        });
+    }
+
+    // Colagem inteligente
+    ta.addEventListener('paste', (e) => {
+        const raw = (e.clipboardData || window.clipboardData)?.getData('text');
+        const cleaned = smartCleanCifraPaste(raw);
+        if (!cleaned) return; // não é texto do Cifra Club → colagem normal
+
+        const replacingAll = !ta.value.trim() ||
+            (ta.selectionStart === 0 && ta.selectionEnd === ta.value.length);
+        if (!replacingAll) {
+            const ok = confirm('Parece uma cifra completa do Cifra Club.\n\nSubstituir TODO o texto atual por ela?\n\n(Cancelar = colar normalmente onde está o cursor)');
+            if (!ok) return; // colagem normal
+        }
+
+        e.preventDefault();
+        ta.focus();
+        ta.select();
+        // insertText mantém o Ctrl+Z funcionando; se não houver suporte, troca direto
+        let done = false;
+        try { done = document.execCommand('insertText', false, cleaned); } catch (_) { done = false; }
+        if (!done || ta.value !== cleaned) ta.value = cleaned;
+        ta.scrollTop = 0;
+        sync(true);
+    });
+
+    // Digitação manual: só atualiza os seletores (não mexe no texto)
+    let _t = null;
+    ta.addEventListener('input', () => {
+        clearTimeout(_t);
+        _t = setTimeout(() => sync(false), 250);
+    });
+
+    if (urlInput) urlInput.addEventListener('input', updateOpenBtn);
+    if (openBtn) {
+        openBtn.onclick = () => {
+            let u = (urlInput && urlInput.value || '').trim();
+            if (!/cifraclub\.com\.br/i.test(u)) return;
+            if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+            window.open(u, '_blank', 'noopener');
+        };
+    }
+
+    sync(true);
+    return { sync };
+}
+
+window._cifraEditors = {
+    add: setupCifraEditor({
+        textareaId: 'addCifraTextPreview', keyTriggerId: 'addCaptureKeyTrigger', keyGridId: 'addCaptureKeyGrid',
+        capoTriggerId: 'addCapoTrigger', capoPopupId: 'addCapoPopup', capoGridId: 'addCapoGrid',
+        urlInputId: 'addCifraClubUrl', openBtnId: 'btnAbrirCifraAdd'
+    }),
+    edit: setupCifraEditor({
+        textareaId: 'editCifraText', keyTriggerId: 'editCaptureKeyTrigger', keyGridId: 'editCaptureKeyGrid',
+        capoTriggerId: 'editCapoTrigger', capoPopupId: 'editCapoPopup', capoGridId: 'editCapoGrid',
+        urlInputId: 'editCifraClubUrl', openBtnId: 'btnAbrirCifraEdit'
+    })
+};
 
 // ─────────────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────────
@@ -1483,9 +1543,12 @@ function openVideo(song) {
             if (activeBtn) activeBtn.classList.add('active');
         }
     }
-    window._fillEditCifraPanel = _fillEditCifraPanel;
+    window._fillEditCifraPanel = () => {
+        _fillEditCifraPanel();
+        if (window._cifraEditors && window._cifraEditors.edit) window._cifraEditors.edit.sync(true);
+    };
     // Já deixa preenchido ao abrir a música (evita sobra da música anterior)
-    _fillEditCifraPanel();
+    window._fillEditCifraPanel();
 
     const editBtn = document.getElementById('editUrlBtn');
     editBtn.onclick = () => {
@@ -1493,63 +1556,9 @@ function openVideo(song) {
         urlEditorPanel.style.display = isVisible ? 'none' : 'block';
         if (!isVisible) {
             newUrlInput.focus();
-            _fillEditCifraPanel();
+            window._fillEditCifraPanel();
         }
     };
-
-    // ── Botão Capturar na Edição ────────────────────────────────────────
-    const btnCapturarEdit = document.getElementById('btnCapturarCifraEdit');
-    if (btnCapturarEdit) {
-        btnCapturarEdit.onclick = async () => {
-            const url = document.getElementById('editCifraClubUrl').value.trim();
-            if (!url) { alert('Insira o link primeiro!'); return; }
-            
-            btnCapturarEdit.textContent = 'Capturando...';
-            const content = await fetchCifraClubContent(url);
-            if (content) {
-                let finalContent = content;
-                let tomInicial = "C";
-                const tomMatch = finalContent.match(/^(?:Tom:\s*)([A-G][b#]?m?)/im);
-                if (tomMatch) {
-                    tomInicial = tomMatch[1];
-                } else {
-                    let detected = detectFormaKey(finalContent);
-                    if (detected) {
-                        const capo = parseCapoFromText(finalContent);
-                        if (capo > 0) {
-                            const fIdx = SCALE.indexOf(normalizeKey(detected).replace(/m$/i, ''));
-                            if (fIdx !== -1) {
-                                const quality = detected.toLowerCase().endsWith('m') ? 'm' : '';
-                                detected = SCALE[(fIdx + capo) % 12] + quality;
-                            }
-                        }
-                        tomInicial = detected;
-                    }
-                    finalContent = `Tom: ${tomInicial}\n\n` + finalContent;
-                }
-                
-                document.getElementById('editCifraText').value = finalContent;
-                
-                const trigger = document.getElementById('editCaptureKeyTrigger');
-                if (trigger) {
-                    trigger.textContent = tomInicial;
-                    trigger.dataset.key = tomInicial;
-                    trigger.dataset.initialKey = tomInicial;
-                }
-                
-                const container = document.getElementById('editCaptureKeyGrid');
-                if (container) {
-                    container.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
-                    const normTom = normalizeKey(tomInicial).replace(/m$/i, '');
-                    const activeBtn = Array.from(container.querySelectorAll('.key-btn')).find(b => b.dataset.key === normTom);
-                    if (activeBtn) activeBtn.classList.add('active');
-                }
-                
-                alert('✅ Conteúdo capturado! Não esqueça de salvar.');
-            }
-            btnCapturarEdit.textContent = 'Capturar';
-        };
-    }
 
     // ── Fechar painel ───────────────────────────────────────────────────
     document.getElementById('cancelUrlBtn').onclick = () => {
@@ -1816,14 +1825,14 @@ if (addSongForm) {
                     cifraclub_url: document.getElementById('addCifraClubUrl').value.trim(),
                     cifra_text: document.getElementById('addCifraTextPreview').value || null
                 });
-        
-            document.getElementById('addCifraTextPreview').value = ''; 
-            document.getElementById('addCifraPreviewContainer').style.display = 'none';
 
+            // Só limpa depois de salvar com sucesso (se der erro, o texto continua lá)
             if (error) throw error;
+            document.getElementById('addCifraTextPreview').value = '';
             alert("Louvor cadastrado!");
             addSongModal.style.display = 'none';
             addSongForm.reset();
+            if (window._cifraEditors && window._cifraEditors.add) window._cifraEditors.add.sync(true);
             fetchData();
         } catch (err) {
             alert("Erro ao cadastrar: " + err.message);

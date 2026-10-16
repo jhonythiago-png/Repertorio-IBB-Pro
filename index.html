@@ -71,14 +71,16 @@
                         <input type="text" id="addObs" placeholder="Observações (ex: Tom E, 2x refrão)">
                         <input type="url" id="addUrl" placeholder="URL do YouTube (Livre para busca se vazio)">
                         <div class="cifraclub-input-group">
-                            <input type="url" id="addCifraClubUrl" style="flex: 1;" placeholder="URL do Cifra Club (Opcional)">
-                            <button type="button" id="btnCapturarCifra" class="capture-btn">Capturar Letra/Cifra</button>
+                            <input type="url" id="addCifraClubUrl" style="flex: 1;" placeholder="Link do Cifra Club (opcional — fica salvo para consulta)">
+                            <button type="button" id="btnAbrirCifraAdd" class="capture-btn" disabled>Abrir no Cifra Club</button>
                         </div>
                         
-                        <div id="addCifraPreviewContainer" style="display:none; margin-top: 15px; margin-bottom: 15px;">
+                        <div id="addCifraPreviewContainer" style="margin-top: 15px; margin-bottom: 15px;">
                             <div style="display:flex; flex-direction: column; gap: 5px; margin-bottom: 10px;">
-                                <label style="font-size: 0.8rem; color: #888;">Pré-visualização e Transposição do Tom:</label>
-                                <div style="position: relative; align-self: flex-start;">
+                                <label style="font-size: 0.8rem; color: #888;">Letra e Cifra — no Cifra Club use Ctrl+A e Ctrl+C e cole abaixo:</label>
+                                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                                <div style="display:flex; align-items:center; gap:6px; position: relative;">
+                                    <span style="font-size: 0.8rem; color: #888;">Tom</span>
                                     <button type="button" id="addCaptureKeyTrigger" class="key-selector-trigger" style="min-width: 60px;">C</button>
                                     <div id="addCaptureKeyPopup" class="key-grid-popup" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; max-width: 90vw; z-index: 10000; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);">
                                         <div class="key-grid-header">
@@ -102,8 +104,17 @@
                                         <button type="button" class="restore-key-btn" id="addCaptureRestoreKey">Restaurar tom inicial</button>
                                     </div>
                                 </div>
+                                <div style="display:flex; align-items:center; gap:6px; position: relative;">
+                                    <span style="font-size: 0.8rem; color: #888;">Capo</span>
+                                    <button type="button" id="addCapoTrigger" class="capo-badge-btn" title="Escolher capotraste">S/Capo</button>
+                                    <div id="addCapoPopup" class="key-grid-popup capo-popup" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; max-width: 90vw; z-index: 10000; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);">
+                                        <div style="text-align:center; margin-bottom:10px;"><span style="color:#aaa; font-size:0.8rem;">Capotraste — Casa</span></div>
+                                        <div class="capo-grid-items" id="addCapoGrid"></div>
+                                    </div>
+                                </div>
+                                </div>
                             </div>
-                            <textarea id="addCifraTextPreview" style="width:100%; height:200px; background:#222; color:#fff; border:1px solid #444; padding:10px; font-family:monospace; font-size:14px; border-radius:5px; resize:vertical;"></textarea>
+                            <textarea id="addCifraTextPreview" placeholder="Cole aqui a página do Cifra Club (Ctrl+V). Título, artista e menus são removidos sozinhos." style="width:100%; height:200px; background:#222; color:#fff; border:1px solid #444; padding:10px; font-family:monospace; font-size:14px; border-radius:5px; resize:vertical;"></textarea>
                         </div>
                         
                         <div class="category-selection">
@@ -418,15 +429,17 @@
                         <p class="editor-section-title"><i class="fas fa-file-alt"></i> Editar Letra e Cifra</p>
                         
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.8rem; color: #888;">Link do Cifra Club:</label>
+                            <label style="font-size: 0.8rem; color: #888;">Link do Cifra Club (opcional — fica salvo para consulta):</label>
                             <div class="cifraclub-input-group">
                                 <input type="text" id="editCifraClubUrl" placeholder="Cole o link aqui..." style="flex: 1; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px;" />
-                                <button type="button" id="btnCapturarCifraEdit" class="capture-btn" style="padding: 8px 12px;">Capturar</button>
+                                <button type="button" id="btnAbrirCifraEdit" class="capture-btn" style="padding: 8px 12px;" disabled>Abrir no Cifra Club</button>
                             </div>
                         </div>
 
                         <div style="display:flex; flex-direction: column; gap: 5px; margin-bottom: 10px;">
-                            <div style="position: relative; align-self: flex-start;">
+                            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:6px; position: relative;">
+                                <span style="font-size: 0.8rem; color: #888;">Tom</span>
                                 <button type="button" id="editCaptureKeyTrigger" class="key-selector-trigger" style="min-width: 60px;">C</button>
                                 <div id="editCaptureKeyPopup" class="key-grid-popup" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; max-width: 90vw; z-index: 10000; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);">
                                     <div class="key-grid-header">
@@ -450,9 +463,18 @@
                                     <button type="button" class="restore-key-btn" id="editCaptureRestoreKey">Restaurar tom inicial</button>
                                 </div>
                             </div>
+                            <div style="display:flex; align-items:center; gap:6px; position: relative;">
+                                    <span style="font-size: 0.8rem; color: #888;">Capo</span>
+                                    <button type="button" id="editCapoTrigger" class="capo-badge-btn" title="Escolher capotraste">S/Capo</button>
+                                    <div id="editCapoPopup" class="key-grid-popup capo-popup" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; max-width: 90vw; z-index: 10000; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);">
+                                        <div style="text-align:center; margin-bottom:10px;"><span style="color:#aaa; font-size:0.8rem;">Capotraste — Casa</span></div>
+                                        <div class="capo-grid-items" id="editCapoGrid"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <textarea id="editCifraText" placeholder="A letra e cifra aparecerão aqui..." style="width:100%; height:250px; background:#222; color:#fff; border:1px solid #444; padding:10px; font-family:monospace; font-size:14px; border-radius:5px; resize:vertical;"></textarea>
+                        <textarea id="editCifraText" placeholder="Edite aqui, ou cole a página do Cifra Club (Ctrl+V) para substituir." style="width:100%; height:250px; background:#222; color:#fff; border:1px solid #444; padding:10px; font-family:monospace; font-size:14px; border-radius:5px; resize:vertical;"></textarea>
                         
                         <div class="url-editor-actions" style="margin-top:10px;">
                             <button id="saveCifraBtn" class="save-url-btn"><i class="fas fa-save"></i> Salvar Letra/Cifra</button>
@@ -633,7 +655,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=PRO_DEFINITIVO_V24"></script>
+    <script src="script.js?v=PRO_DEFINITIVO_V25"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
