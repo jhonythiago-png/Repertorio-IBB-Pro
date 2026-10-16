@@ -58,6 +58,33 @@ let _setlistSongs = [];       // lista de músicas da escala atual
 let _setlistIndex  = -1;      // índice da música aberta
 // ---------------------------------
 
+// --- Leitura centralizada de Tom e Capotraste ---
+// Aceita o formato ANTIGO e o NOVO do Cifra Club:
+//   Antigo: "Capotraste na 2ª casa"  |  "Tom: D (forma dos acordes no tom de C)"
+//   Novo:   "Capotraste: 2ª casa"    |  "Tom: D (com forma de C)"
+// Também aceita variações: "Capo 2", "Capo: 2", "2º", "2a", "2°".
+function parseCapoFromText(txt) {
+    if (!txt) return 0;
+    const m = txt.match(/Capotraste\s*(?:na|:|-)?\s*(\d{1,2})\s*[aª°º]?/i) ||
+              txt.match(/\bCapo\s*:?\s*(\d{1,2})\b/i);
+    if (!m) return 0;
+    const n = parseInt(m[1], 10);
+    return (n >= 0 && n <= 12) ? n : 0;
+}
+
+// Regex da "forma" dentro da linha de Tom.
+// Grupo 1 = prefixo (ex: "com forma de "), Grupo 2 = nota da forma (ex: "C").
+// A nota é sensível a maiúscula de propósito (evita capturar o "d" de "de").
+function getFormaRegex() {
+    return /((?:[Ff]orma\s+dos\s+acordes\s+no\s+tom\s+de|[Cc]om\s+forma\s+de|[Ff]orma\s+de|[Ff]orma)\s+)([A-G][b#]?m?)/;
+}
+
+function parseFormaFromText(txt) {
+    if (!txt) return null;
+    const m = txt.match(getFormaRegex());
+    return m ? m[2] : null;
+}
+
 // --- Motores de Captura e Transposição ---
 
 async function fetchCifraClubContent(url) {
@@ -127,8 +154,8 @@ async function fetchCifraClubContent(url) {
 
                 // Capo: busca no body inteiro (aparece como texto "Capotraste na 3ª casa")
                 const bodyText = doc.body ? (doc.body.innerText || doc.body.textContent) : '';
-                const capoRx = bodyText.match(/Capotraste\s+na\s+(\d+)[aª°]?\s*casa/i);
-                if (capoRx) injectedHeader += `Capotraste na ${capoRx[1]}ª casa\n`;
+                const capoNum = parseCapoFromText(bodyText);
+                if (capoNum > 0) injectedHeader += `Capotraste na ${capoNum}ª casa\n`;
 
                 // ── STEP B: limpar o texto da cifra ──────────────────────────
                 let cleanedText = (cifraElement.innerText || cifraElement.textContent)
@@ -431,9 +458,8 @@ function openPerformance(song, mode) {
     const tomLine      = tomLineMatch ? tomLineMatch[1].trim() : null;
 
     // 2) Extrai capo da linha "Capotraste na 3ª casa"
-    const capoMatch    = textContent.match(/Capotraste\s+na\s+(\d+)[aª°]?\s*casa/i) ||
-                         textContent.match(/Capo\s*(\d+)/i);
-    let capoOriginal = capoMatch ? parseInt(capoMatch[1]) : 0;
+    //    (aceita também o formato novo "Capotraste: 3ª casa")
+    let capoOriginal = parseCapoFromText(textContent);
 
     // Helper: detecta o tom da PRIMEIRA PARTE (ignora intro)
     function detectFormaKey(txt) {
@@ -486,11 +512,11 @@ function openPerformance(song, mode) {
         const tomRealMatch = tomLine.match(/^([A-G][b#]?m?)/i);
         if (tomRealMatch) displayKey = tomRealMatch[1]; // "Bb"
 
-        const formaMatch = tomLine.match(/tom\s+de\s+([A-G][b#]?m?)/i) ||
-                           tomLine.match(/\(forma\s+([A-G][b#]?m?)\)/i);
+        // Aceita "(forma dos acordes no tom de G)" e "(com forma de G)"
+        const formaFound = parseFormaFromText(tomLine);
         
-        if (formaMatch) {
-            formaKey = formaMatch[1]; // "G"
+        if (formaFound) {
+            formaKey = formaFound; // "G"
         } else {
             // Se não diz a forma explicitamente, confiamos no Tom declarado.
             // Só tentamos adivinhar pelos acordes se houver CAPO sem forma especificada.
@@ -882,9 +908,8 @@ function updateKeyIndicatorFromSemitones() {
 
     const tomSubLabel = document.getElementById('perfTomSubLabel');
     if (tomSubLabel && tomSubLabel.style.display !== 'none' && currentPerformanceSong) {
-        const originalText = currentPerformanceSong.cifra_text.match(/(\(forma\s+dos\s+acordes\s+no\s+tom\s+de\s+|forma\s+)([A-G][b#]?m?)/i);
-        if (originalText) {
-            const originalForma = originalText[2];
+        const originalForma = parseFormaFromText(currentPerformanceSong.cifra_text || '');
+        if (originalForma) {
             const newForma = transposeChord(originalForma, currentTransposeSemitones);
             tomSubLabel.textContent = `(forma dos acordes no tom de ${newForma})`;
         }
@@ -1039,7 +1064,7 @@ function transposeRawText(text, semitones) {
     newText = newText.replace(/^(Tom:\s*)([A-G][b#]?m?)(.*)$/im, (match, prefix, key, rest) => {
         const newKey = transposeChord(key, semitones);
         let newRest = rest;
-        const formaMatch = rest.match(/(forma\s+dos\s+acordes\s+no\s+tom\s+de\s+|forma\s+)([A-G][b#]?m?)/i);
+        const formaMatch = rest.match(getFormaRegex());
         if (formaMatch) {
             const oldForma = formaMatch[2];
             const newForma = transposeChord(oldForma, semitones);
@@ -1480,9 +1505,8 @@ function openVideo(song) {
                 } else {
                     let detected = detectFormaKey(finalContent);
                     if (detected) {
-                        const capoMatch = finalContent.match(/Capotraste na (\d+)ª casa/i);
-                        if (capoMatch) {
-                            const capo = parseInt(capoMatch[1]);
+                        const capo = parseCapoFromText(finalContent);
+                        if (capo > 0) {
                             const fIdx = SCALE.indexOf(normalizeKey(detected).replace(/m$/i, ''));
                             if (fIdx !== -1) {
                                 const quality = detected.toLowerCase().endsWith('m') ? 'm' : '';
@@ -1974,10 +1998,8 @@ document.querySelectorAll('.sub-tab-btn').forEach(btn => {
             } else {
                 screen.classList.remove('vocal-mode');
                 if (keyControlGroup) keyControlGroup.style.display = 'flex';
-                // Mostrar capo só se a música tiver capotraste
-                const capoDisp = document.getElementById('perfCapoDisplay');
-                const hasCapo = capoDisp && parseInt(capoDisp.dataset.capo || 0) > 0;
-                if (capoGrp) capoGrp.style.display = hasCapo ? 'flex' : 'none';
+                // Capo sempre visível no modo músico (permite escolher a casa mesmo sem capo)
+                if (capoGrp) capoGrp.style.display = 'flex';
             }
             renderPerformanceContent();
         }
@@ -2182,8 +2204,7 @@ function _populateSetlistTomCapo() {
     let detectedCapo = 0;
 
     const tomLineMatch = textContent.match(/^Tom:\s*(.+)$/im);
-    const capoMatchTxt = textContent.match(/Capotraste\s+na\s+(\d+)[aª°]?\s*casa/i);
-    detectedCapo = capoMatchTxt ? parseInt(capoMatchTxt[1]) : 0;
+    detectedCapo = parseCapoFromText(textContent);
 
     if (tomLineMatch) {
         const tomLine = tomLineMatch[1].trim();
@@ -2811,8 +2832,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const txt = song.cifra_text;
             
             // 1) Capo
-            const cM = txt.match(/Capo\s*(\d+)/i) || txt.match(/Capotraste\s+na\s+(\d+)/i);
-            if (cM) detCapo = parseInt(cM[1]);
+            detCapo = parseCapoFromText(txt);
 
             // 2) Tom
             let displayKey = null;
