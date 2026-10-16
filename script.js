@@ -1453,37 +1453,47 @@ function openVideo(song) {
     }
 
     // ── Botão Editar Versão (toggle painel) ─────────────────────────────
+    // Preenche o painel de edição de Letra/Cifra com os dados DESTA música.
+    // Usado por TODOS os caminhos que abrem a edição (botão Editar Versão no
+    // modal e botão Editar da tela de tocar), para nunca abrir vazio ou com a
+    // letra de outra música.
+    function _fillEditCifraPanel() {
+        const editCifraText = document.getElementById('editCifraText');
+        if (editCifraText) editCifraText.value = song.cifra_text || '';
+
+        const editCifraUrl = document.getElementById('editCifraClubUrl');
+        if (editCifraUrl) editCifraUrl.value = song.cifraclub_url || '';
+
+        const trigger = document.getElementById('editCaptureKeyTrigger');
+        const container = document.getElementById('editCaptureKeyGrid');
+        let tomInicial = "C";
+        if (song.cifra_text) {
+            const tomMatch = song.cifra_text.match(/^(?:Tom:\s*)([A-G][b#]?m?)/im);
+            if (tomMatch) tomInicial = tomMatch[1];
+        }
+        if (trigger) {
+            trigger.textContent = tomInicial;
+            trigger.dataset.key = tomInicial;
+            trigger.dataset.initialKey = tomInicial;
+        }
+        if (container) {
+            container.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
+            const normTom = normalizeKey(tomInicial).replace(/m$/i, '');
+            const activeBtn = Array.from(container.querySelectorAll('.key-btn')).find(b => b.dataset.key === normTom);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+    }
+    window._fillEditCifraPanel = _fillEditCifraPanel;
+    // Já deixa preenchido ao abrir a música (evita sobra da música anterior)
+    _fillEditCifraPanel();
+
     const editBtn = document.getElementById('editUrlBtn');
     editBtn.onclick = () => {
         const isVisible = urlEditorPanel.style.display !== 'none';
         urlEditorPanel.style.display = isVisible ? 'none' : 'block';
         if (!isVisible) {
             newUrlInput.focus();
-            // Preencher campos de cifra se existirem
-            const editCifraText = document.getElementById('editCifraText');
-            if (editCifraText) editCifraText.value = song.cifra_text || '';
-            
-            const editCifraUrl = document.getElementById('editCifraClubUrl');
-            if (editCifraUrl) editCifraUrl.value = song.cifraclub_url || '';
-            
-            const trigger = document.getElementById('editCaptureKeyTrigger');
-            const container = document.getElementById('editCaptureKeyGrid');
-            if (container && song.cifra_text) {
-                let tomInicial = "C";
-                const tomMatch = song.cifra_text.match(/^(?:Tom:\s*)([A-G][b#]?m?)/im);
-                if (tomMatch) tomInicial = tomMatch[1];
-                
-                if (trigger) {
-                    trigger.textContent = tomInicial;
-                    trigger.dataset.key = tomInicial;
-                    trigger.dataset.initialKey = tomInicial;
-                }
-
-                container.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
-                const normTom = normalizeKey(tomInicial).replace(/m$/i, '');
-                const activeBtn = Array.from(container.querySelectorAll('.key-btn')).find(b => b.dataset.key === normTom);
-                if (activeBtn) activeBtn.classList.add('active');
-            }
+            _fillEditCifraPanel();
         }
     };
 
@@ -1581,6 +1591,13 @@ function openVideo(song) {
             const rawText = document.getElementById('editCifraText').value;
             const cifraUrl = document.getElementById('editCifraClubUrl').value.trim();
             const btn = document.getElementById('saveCifraBtn');
+
+            // 🔒 Trava: impede apagar a letra/cifra sem querer
+            const tinhaLetra = song.cifra_text && song.cifra_text.trim().length > 10;
+            if (tinhaLetra && rawText.trim().length <= 10) {
+                const ok = confirm(`⚠️ ATENÇÃO\n\nO campo de letra/cifra está vazio.\nSe continuar, a letra de "${song.title}" será APAGADA.\n\nDeseja realmente apagar?`);
+                if (!ok) return;
+            }
             btn.textContent = 'Salvando...';
 
             try {
@@ -2623,6 +2640,8 @@ window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const editPanel = document.getElementById('urlEditorPanel');
                 if (editPanel) editPanel.style.display = 'block';
+                // Carrega a letra/cifra desta música no painel de edição
+                if (typeof window._fillEditCifraPanel === 'function') window._fillEditCifraPanel();
             }, 300);
         };
     }
